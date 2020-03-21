@@ -1,3 +1,4 @@
+> texts.txt
 for url in "$@";
 do
  #Detect file type
