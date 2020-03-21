@@ -1,5 +1,5 @@
 from flask import Flask           # import flask
-from flask import render_template, redirect, url_for, session, request
+from flask import render_template, redirect, url_for, session, request, send_file
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
 
@@ -86,6 +86,6 @@ def result():              # call method hello_name
         app.instance_path, 'excells', 'res_' + fn
         )
     prods = process_excell(path, path_res)
-    return "Thank you! Wait a moment. Analyzing"
+    return send_file(path_res, as_attachment=True)
 
 app.run(debug=True)                     # run the flask app
