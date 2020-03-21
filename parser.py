@@ -162,9 +162,9 @@ def finding_num(b):
         num = int((b[i].num).split(' ')[0])
         print(b[i].name,b[i].num)
         try:
-            dict_num[a[i].name][num] += 1
+            dict_num[b[i].name][num] += 1
         except:
-            dict_num[a[i].name][num] = 1
+            dict_num[b[i].name][num] = 1
     print(dict_num)
     #Matching value is the most repeatable one.
     for name in dict_num:
