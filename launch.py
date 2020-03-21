@@ -60,8 +60,9 @@ def upload():
     return render_template('upload.html', form=form)
 
 
-@app.route("/search/<query>")              # at the end point /<name>
-def hello_name(query):              # call method hello_name
+@app.route("/search", methods=['GET', 'POST'])              # at the end point /<name>
+def hello_name():              # call method hello_name
+    query = request.args.get('query')
     links = google(query)
     path = fetch(links)
     fnd = yargy_parser(path)
@@ -70,9 +71,7 @@ def hello_name(query):              # call method hello_name
 
 @app.route('/')              # at the end point /<name>
 def index():              # call method hello_name
-    return """
-    <a href="/upload">Upload xls</a><br><a href="/search/OptiX%20OSN%201800%20I%20Compact%20MTBF">Search (enter query in path)</a>
-    """
+    return render_template('index.html')
 
 @app.route('/result')              # at the end point /<name>
 def result():              # call method hello_name
