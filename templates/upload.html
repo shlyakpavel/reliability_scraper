@@ -1,15 +1,26 @@
 <html>
 <head>
-<title>Hello mbtfucker</title>
+<title>Upload file</title>
 </head>
 <style>
 body{
 background:#ffff00	
 	}</style>
+<script>
+function wait(){
+  document.getElementById("state1").style.display = 'none';
+  document.getElementById("state2").style.display = 'block';
+}
+</script>
 <body>
+    <div id="state1">
 	<form method="POST" enctype="multipart/form-data">
     <input type="file" id="excell" name="excell"><br><br>
-    <input type="submit" value="Submit">
+    <input type="submit" value="Submit" onclick='wait()'>
     </form>
+    </div>
+    <div id="state2" style="display:none">
+    Wait, please
+    </div>
 </body>
 </html>
