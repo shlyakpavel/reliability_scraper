@@ -2,7 +2,7 @@ from yargy.interpretation import fact
 from yargy import rule, Parser, or_, not_, and_
 from yargy.predicates import eq, type
 from yargy.pipelines import morph_pipeline
-import re    
+import re
 
 def yargy_parser(path):
     RULE = fact (
@@ -74,12 +74,12 @@ def yargy_parser(path):
     X_mttr = rule(INT, UNIT_mttr.optional()).interpretation(
         RULE.num
     )
-    
-    TRESH = rule(and_(not_(eq(NUM_MTBF)),or_(not_(eq(NAME_mttr)),not_(eq(NAME_mtbf))),not_(eq(UNIT_mtbf)), not_(eq(DOT)), 
+
+    TRESH = rule(and_(not_(eq(NUM_MTBF)),or_(not_(eq(NAME_mttr)),not_(eq(NAME_mtbf))),not_(eq(UNIT_mtbf)), not_(eq(DOT)),
                  not_(eq(INT)) , not_(eq(X_mttr)), not_(eq(X_mtbf)))).interpretation(
         RULE.tresh
     )
-    
+
     rule_1 = (rule(NAME_mtbf ,(TRESH.optional()).repeatable(),  X_mtbf).repeatable()
              ).interpretation(
         RULE
@@ -91,13 +91,15 @@ def yargy_parser(path):
     )
     f = open(path, 'r')
     text = f.read()
+    #Remove line separators
     text = re.sub("^\s+|\n|\r|\s+$", '', text)
     line = text
-    #Temporary workaround. Fix it to site by site processing later!!!
+    #Temporary workaround. Fix it to site by site processing later
     n = 500
     text = [line[i-5 if i-5>0 else 0:i+n+5 if i+n+5 < len(line) else len(line) -1] for i in range(0, len(line), n)]
     MEASURE = rule(or_(NAME_mtbf, X_mtbf, NAME_mttr, X_mttr))
     new_line = []
+    #Parser #1 text preprocessing
     parser = Parser(MEASURE)
     for line in text:
         matches = list(parser.findall(line))
@@ -122,6 +124,7 @@ def yargy_parser(path):
     MEASURE = or_(rule_1,rule_2).interpretation(
         RULE
     )
+    #Parser #2 Parsing reliability metrics.
     parser = Parser(MEASURE)
     for line in new_line:
         matches = list(parser.findall(line))
@@ -132,7 +135,6 @@ def yargy_parser(path):
                     LIST.append(match.fact)
     return LIST
 
-#на вход поступает fact от yargy
 def finding_num(b):
     names_mtbf = ['mtbf',
                 'mean time between',
@@ -159,21 +161,14 @@ def finding_num(b):
             b[i].num = str(int(float(((b[i].num).replace(',','')).split(' ')[0]))) + str(' ') + str('hours')
         num = int((b[i].num).split(' ')[0])
         print(b[i].name,b[i].num)
-        if b[i].name == 'MTBF':
-            try:
-                dict_num['MTBF'][num] += 1
-            except:
-                dict_num['MTBF'][num] = 1
-        elif b[i].name == 'MTTR':
-            try:
-                dict_num['MTTR'][num] += 1
-            except:
-                dict_num['MTTR'][num] = 1
+        try:
+            dict_num[a[i].name][num] += 1
+        except:
+            dict_num[a[i].name][num] = 1
     print(dict_num)
+    #Matching value is the most repeatable one.
     for name in dict_num:
         for num in dict_num[name]:
             if dict_num[name][num] > dict_max[name]:
                 dict_max[name] = num
     return dict_max
-
-#на выходе словарь с ключами MTTF и MTBF
