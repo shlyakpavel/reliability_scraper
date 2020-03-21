@@ -4,7 +4,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
 
 from parser import yargy_parser
-from parser import finding_num, read_excell
+from parser import finding_num
 
 import pandas as pd
 

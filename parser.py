@@ -166,10 +166,3 @@ def finding_num(b):
                 dict_max[name] = num
     return dict_max
 #на выходе словарь с ключами MTTF и MTBF
-
-def read_excell(path):
-    df = pd.read_excel(path)
-    products = pd.DataFrame(df, columns= ['Product'])
-    prods = products.values.tolist()[0]
-    return prods
-
