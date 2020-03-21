@@ -40,7 +40,7 @@ def yargy_parser(path):
     )
 
 
-    NUM_MTBF = or_(rule(INT, DOT, INT), rule(INT))
+    NUM_MTBF = or_(rule(INT, DOT, INT), rule(INT), rule(INT, DOT, INT, DOT, INT))
 
     UNIT_mtbf = morph_pipeline(
             [
@@ -67,11 +67,11 @@ def yargy_parser(path):
         )
 
 
-    X_mtbf = rule(NUM_MTBF, UNIT_mtbf).interpretation(
+    X_mtbf = rule(NUM_MTBF, UNIT_mtbf.optional()).interpretation(
         RULE.num
     )
 
-    X_mttr = rule(INT, UNIT_mttr).interpretation(
+    X_mttr = rule(INT, UNIT_mttr.optional()).interpretation(
         RULE.num
     )
     
@@ -134,12 +134,22 @@ def yargy_parser(path):
 
 #на вход поступает fact от yargy
 def finding_num(b):
+    names_mtbf = ['mtbf',
+                'mean time between',
+                'mean time between failures',
+                'mean time between failure',]
+    names_mttr = ['mttr',
+                'mean time to',
+                'mean time to repair',
+                'mean time to repairs',
+                 'repair time']
     dict_num = {'MTTR':{},'MTBF':{}}
     dict_max = {'MTTR':0,'MTBF':0}
     for i in range(len(b)):
-        if b[i].name == 'Mean time between':
+        print(i)
+        if b[i].name.lower() in names_mtbf:
             b[i].name = 'MTBF'
-        elif b[i].name == 'Mean time to':
+        elif b[i].name.lower() in names_mttr:
             b[i].name = 'MTTR'
         if ('years' or 'year' or '年' or 'год') in b[i].num:
             num = float((b[i].num).split(' ')[0])
@@ -149,7 +159,6 @@ def finding_num(b):
             b[i].num = str(int(float(((b[i].num).replace(',','')).split(' ')[0]))) + str(' ') + str('hours')
         num = int((b[i].num).split(' ')[0])
         print(b[i].name,b[i].num)
-        #for obj in ['MTBF', 'MTTR']: TODO!!
         if b[i].name == 'MTBF':
             try:
                 dict_num['MTBF'][num] += 1
@@ -160,9 +169,11 @@ def finding_num(b):
                 dict_num['MTTR'][num] += 1
             except:
                 dict_num['MTTR'][num] = 1
+    print(dict_num)
     for name in dict_num:
         for num in dict_num[name]:
             if dict_num[name][num] > dict_max[name]:
                 dict_max[name] = num
     return dict_max
+
 #на выходе словарь с ключами MTTF и MTBF
