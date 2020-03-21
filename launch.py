@@ -32,6 +32,7 @@ def process_excell(path_1, path_2):
         fnd = yargy_parser(path)
         res = finding_num(fnd)
         df["MTBF"][i] = res["MTBF"]
+        df["MTTR"][i] = res["MTTR"]
     df.to_excel(path_2)
 
 
