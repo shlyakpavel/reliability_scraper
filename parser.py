@@ -93,8 +93,9 @@ def yargy_parser(path):
     text = f.read()
     text = re.sub("^\s+|\n|\r|\s+$", '', text)
     line = text
-    #n = 500
-    #text = [line[i-5 if i-5>0 else 0:i+n+5 if i+n+5 < len(line) else len(line) -1] for i in range(0, len(line), n)]
+    #Temporary workaround. Fix it to site by site processing later!!!
+    n = 500
+    text = [line[i-5 if i-5>0 else 0:i+n+5 if i+n+5 < len(line) else len(line) -1] for i in range(0, len(line), n)]
     MEASURE = rule(or_(NAME_mtbf, X_mtbf, NAME_mttr, X_mttr))
     new_line = []
     parser = Parser(MEASURE)
