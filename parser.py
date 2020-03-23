@@ -15,7 +15,6 @@ def yargy_parser(path):
 
     DOT = or_(eq('.'),eq(','))
 
-
     NAME_avail = morph_pipeline(
         [
         'System Reliability',
@@ -48,7 +47,6 @@ def yargy_parser(path):
         RULE.name
     )
 
-
     NUM_MTBF = or_(rule(INT, DOT, INT), rule(INT), rule(INT, DOT, INT, DOT, INT))
     NUM_avail = or_(rule(INT, DOT, INT))
 
@@ -76,7 +74,6 @@ def yargy_parser(path):
             ]
         )
 
-
     X_mtbf = rule(NUM_MTBF, UNIT_mtbf.optional()).interpretation(
         RULE.num
     )
@@ -88,7 +85,6 @@ def yargy_parser(path):
     X_avail = rule(NUM_avail, PUNCT.optional()).interpretation(
         RULE.num
     )
-
     TRESH = rule(and_(not_(eq(NUM_MTBF)),or_(not_(eq(NAME_mttr)),not_(eq(NAME_mtbf))),not_(eq(UNIT_mtbf)), not_(eq(DOT)),
                  not_(eq(INT)) , not_(eq(X_mttr)), not_(eq(X_mtbf)))).interpretation(
         RULE.tresh
@@ -114,6 +110,8 @@ def yargy_parser(path):
     #Remove line separators
     text = re.sub("^\s+|\n|\r|\s+$", '', text)
     line = text
+
+    #Temporary workaround. Fix it to site by site processing later
     n = 500
     text = [line[i-5 if i-5>0 else 0:i+n+5 if i+n+5 < len(line) else len(line) -1] for i in range(0, len(line), n)]
     MEASURE = rule(or_(X_avail, NAME_avail, X_mttr, X_mtbf, NAME_mttr, NAME_mtbf))
@@ -203,6 +201,8 @@ def finding_num(b):
         except:
             dict_num[b[i].name][num] = 1
     print(dict_num)
+    
+    #Matching value is the most repeatable one.
     for name in dict_num:
         for num in dict_num[name]:
                 if dict_num[name][num] > dict_max_num[name]:

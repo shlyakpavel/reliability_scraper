@@ -1,21 +1,24 @@
+<!DOCTYPE html>
 <html>
 <head>
 <title>Upload file</title>
-</head>
 <style>
 body{
 background:#ffff00	
-	}</style>
+	}
+</style>
 <script>
 function wait(){
   document.getElementById("state1").style.display = 'none';
   document.getElementById("state2").style.display = 'block';
 }
 </script>
+</head>
 <body>
     <div id="state1">
 	<form method="POST" enctype="multipart/form-data">
-    <input type="file" id="excell" name="excell"><br><br>
+    <label for="excell">XLS file:</label><br>
+    <input type="file" id="excell" name="excell"><br>
     <input type="submit" value="Submit" onclick='wait()'>
     </form>
     </div>
