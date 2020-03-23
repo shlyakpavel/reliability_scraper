@@ -1,3 +1,4 @@
+  
 from yargy.interpretation import fact
 from yargy import rule, Parser, or_, not_, and_
 from yargy.predicates import eq, type
@@ -14,8 +15,7 @@ def yargy_parser(path):
     PUNCT = type('PUNCT')
 
     DOT = or_(eq('.'),eq(','))
-
-
+    
     NAME_mtbf = morph_pipeline(
             [
                 'MTBF',
@@ -38,7 +38,6 @@ def yargy_parser(path):
     ).interpretation(
         RULE.name
     )
-
 
     NUM_MTBF = or_(rule(INT, DOT, INT), rule(INT), rule(INT, DOT, INT, DOT, INT))
 
@@ -66,7 +65,6 @@ def yargy_parser(path):
             ]
         )
 
-
     X_mtbf = rule(NUM_MTBF, UNIT_mtbf.optional()).interpretation(
         RULE.num
     )
@@ -89,15 +87,17 @@ def yargy_parser(path):
              ).interpretation(
         RULE
     )
+
     f = open(path, 'r')
     text = f.read()
     #Remove line separators
     text = re.sub("^\s+|\n|\r|\s+$", '', text)
     line = text
+
     #Temporary workaround. Fix it to site by site processing later
     n = 500
     text = [line[i-5 if i-5>0 else 0:i+n+5 if i+n+5 < len(line) else len(line) -1] for i in range(0, len(line), n)]
-    MEASURE = rule(or_(NAME_mtbf, X_mtbf, NAME_mttr, X_mttr))
+    MEASURE = rule(or_(X_mttr, X_mtbf, NAME_mttr, NAME_mtbf))
     new_line = []
     #Parser #1 text preprocessing
     parser = Parser(MEASURE)
@@ -105,7 +105,7 @@ def yargy_parser(path):
         matches = list(parser.findall(line))
         spans = [_.span for _ in matches]
         new_span = [0,0]
-        if spans != [] and len(spans)>=2:
+        if len(spans)>=2:
             for i in range(0,len(spans)-1,1):
                 mini = 1000000
                 maxi = 0
@@ -147,8 +147,8 @@ def finding_num(b):
                  'repair time']
     dict_num = {'MTTR':{},'MTBF':{}}
     dict_max = {'MTTR':0,'MTBF':0}
+    dict_max_num = {'MTTR':0, 'MTBF':0}
     for i in range(len(b)):
-        print(i)
         if b[i].name.lower() in names_mtbf:
             b[i].name = 'MTBF'
         elif b[i].name.lower() in names_mttr:
@@ -159,16 +159,21 @@ def finding_num(b):
             b[i].num = str(int(round(num))) + str(' ') + str('hours')
         else:
             b[i].num = str(int(float(((b[i].num).replace(',','')).split(' ')[0]))) + str(' ') + str('hours')
-        num = int((b[i].num).split(' ')[0])
+        try:
+            num = int((b[i].num).split(' ')[0])
+        except:
+            num = b[i].num
         print(b[i].name,b[i].num)
         try:
             dict_num[b[i].name][num] += 1
         except:
             dict_num[b[i].name][num] = 1
     print(dict_num)
+    
     #Matching value is the most repeatable one.
     for name in dict_num:
         for num in dict_num[name]:
-            if dict_num[name][num] > dict_max[name]:
-                dict_max[name] = num
+                if dict_num[name][num] > dict_max_num[name]:
+                    dict_max_num[name] = dict_num[name][num]
+                    dict_max[name] = num
     return dict_max
