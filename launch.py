@@ -87,4 +87,4 @@ def result():              # call method hello_name
     prods = process_excell(path, path_res)
     return send_file(path_res, as_attachment=True)
 
-app.run(debug=True)                     # run the flask app
+app.run(debug=True,host='0.0.0.0')                     # run the flask app
