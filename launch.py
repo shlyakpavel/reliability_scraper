@@ -19,8 +19,8 @@ def google(query):
     return lst
 
 def fetch(links):
-    data = str()
-    cmd = "bash fetch.sh " + " ".join(links)
+    dat = ' '.join('"{0}"'.format(w) for w in links)
+    cmd = "bash fetch.sh " + dat
     os.system(cmd)
     return "texts.txt"
 
