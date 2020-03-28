@@ -25,7 +25,7 @@ def fetch(links):
     return "texts.txt"
 
 def process_excell(path_1, path_2):
-    df = pd.read_excel(path_1)
+    df = pd.read_excel(path_1, engine='openpyxl')
     for i, row in df.iterrows():
         links = google(row['Product'] + ' MTBF')
         path = fetch(links)

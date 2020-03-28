@@ -2,5 +2,4 @@ yargy
 flask-wtf
 flask
 pandas
-xlrd
 openpyxl
