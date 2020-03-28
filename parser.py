@@ -185,7 +185,8 @@ def finding_num(b):
             b[i].num = float(str(b[i].num)[:6])
         elif b[i].name == 'System Reliability':
             try:
-                b[i].num = float(b[i].num)
+                b[i].num = (b[i].num).replace(' ','')
+                b[i].num = float((b[i].num).replace(',','.'))
                 b[i].num = float(str(b[i].num)[:6])
             except:
                 b[i].num = float((b[i].num).replace(b[i].num[len(b[i].num)-1],''))
