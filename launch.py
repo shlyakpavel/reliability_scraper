@@ -1,17 +1,22 @@
-from flask import Flask           # import flask
-from flask import render_template, redirect, url_for, session, request, send_file
-from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileRequired
+import os
 
 from parser import yargy_parser
 from parser import finding_num
+
+from flask import Flask
+from flask import render_template, redirect, url_for, request, send_file
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileRequired
 
 import pandas as pd
 
 from werkzeug.utils import secure_filename
 
-import os
 def google(query):
+    """Searches the query in Google
+    Requires "Googler" command-line tool
+    Returns list of URLS
+    """
     stream = os.popen('googler ' + query + ' --np -C | grep http')
     output = stream.read()
     lst = output.split('\n')
@@ -19,30 +24,41 @@ def google(query):
     return lst
 
 def fetch(links):
+    """Fetches the pages by URLS, renders them and
+    outputs as text file in the current dir
+    Requires "fetch.sh" bash script
+    Returns a string with the output file name
+    """
     dat = ' '.join('"{0}"'.format(w) for w in links)
     cmd = "bash fetch.sh " + dat
     os.system(cmd)
     return "texts.txt"
 
 def process_excell(path_1, path_2):
-    df = pd.read_excel(path_1, engine='openpyxl')
-    for i, row in df.iterrows():
+    """Reads the spreadsheet (path_1),
+    processes it and outputs the result (path_2)
+    Requires openpyxl
+    """
+    data_frame = pd.read_excel(path_1, engine='openpyxl')
+    for i, row in data_frame.iterrows():
         links = google(row['Product'] + ' MTBF')
         path = fetch(links)
         fnd = yargy_parser(path)
         res = finding_num(fnd)
-        df["MTBF"][i] = res["MTBF"]
-        df["MTTR"][i] = res["MTTR"]
-    df.to_excel(path_2)
+        data_frame["MTBF"][i] = res["MTBF"]
+        data_frame["MTTR"][i] = res["MTTR"]
+    data_frame.to_excel(path_2)
 
 
 app = Flask(__name__)             # create an app instance
 
 class ExcellForm(FlaskForm):
+    """A simple class for the form used by the uploader"""
     excell = FileField(validators=[FileRequired()])
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
+    """Upload page is used to retrieve the xls file from user"""
     form = ExcellForm(csrf_enabled=False)
     if form.validate_on_submit():
         f = form.excell.data
@@ -54,14 +70,14 @@ def upload():
             app.instance_path, 'excells', filename
         )
         f.save(path)
-        #session['filename'] = filename
         return redirect(url_for('result', filename=filename))
 
     return render_template('upload.html', form=form)
 
 
-@app.route("/search", methods=['GET', 'POST'])              # at the end point /<name>
-def hello_name():              # call method hello_name
+@app.route("/search", methods=['GET', 'POST'])
+def search_page():
+    """Result page for the manual search entered by user on index page"""
     query = request.args.get('query')
     links = google(query)
     path = fetch(links)
@@ -69,22 +85,22 @@ def hello_name():              # call method hello_name
     res = str(finding_num(fnd))
     return "Found for "+ query+": " + res
 
-@app.route('/')              # at the end point /<name>
-def index():              # call method hello_name
+@app.route('/')
+def index_page():
     return render_template('index.html')
 
-@app.route('/result')              # at the end point /<name>
-def result():              # call method hello_name
+@app.route('/result')
+def result():
+    """Returns the final xls to the user"""
     filename = request.args['filename']  # counterpart for url_for()
     fn = secure_filename(filename)
-    #messages = session['filename']
     path = os.path.join(
         app.instance_path, 'excells', fn
         )
     path_res = os.path.join(
         app.instance_path, 'excells', 'res_' + fn
         )
-    prods = process_excell(path, path_res)
+    process_excell(path, path_res)
     return send_file(path_res, as_attachment=True)
 
-app.run(debug=True,host='0.0.0.0')                     # run the flask app
+app.run(debug=True, host='0.0.0.0')                     # run the flask app
