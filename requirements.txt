@@ -1,0 +1,5 @@
+yargy
+flask-wtf
+flask
+pandas
+openpyxl
