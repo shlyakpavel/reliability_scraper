@@ -45,7 +45,9 @@ def yargy_parser(path):
         RULE.name
     )
 
-    NUM_MTBF = or_(rule(INT, DOT, INT), rule(INT), rule(INT, DOT, INT, DOT, INT))
+    NUM_MTBF = or_(rule(INT, DOT, INT), rule(INT),
+                   rule(INT, DOT, INT, DOT, INT),
+                   rule(INT, INT), rule(INT, INT, INT))
     NUM_avail = or_(rule(INT, DOT, INT))
 
     UNIT_mtbf = morph_pipeline(
@@ -57,6 +59,7 @@ def yargy_parser(path):
             'год',
             'час',
             'h',
+            'ч'
         ]
     )
 
@@ -66,6 +69,7 @@ def yargy_parser(path):
             'hours',
             'час',
             'h',
+            'ч'
         ]
     )
 
@@ -113,9 +117,9 @@ def yargy_parser(path):
     line = text
 
     #Temporary workaround. Fix it to site by site processing later
-    n = 500
-    text = [line[i-5 if i-5 > 0 else 0:i+n+5 if i+n+5 < len(line)
-                 else len(line) -1] for i in range(0, len(line), n)]
+    num_c = 500
+    text = [line[i-5 if i-5 > 0 else 0: i + num_c + 5 if i + num_c + 5 < len(line)
+                 else len(line) -1] for i in range(0, len(line), num_c)]
     MEASURE = rule(or_(X_avail, NAME_avail, X_mttr, X_mtbf, NAME_mttr, NAME_mtbf))
     new_line = []
     #Parser #1 text preprocessing
@@ -156,12 +160,17 @@ def yargy_parser(path):
 
 
 def finding_num(b):
-    names_mtbf = ['mtbf', 'mean time between',
+    names_mtbf = ['mtbf',
+                  'mean time between',
                   'mean time between failures',
                   'mean time between failure',]
-    names_mttr = ['mttr', 'mean time to', 'mean time to repair',
-                  'mean time to repairs', 'repair time']
-    names_avail = ['system reliability', 'availability']
+    names_mttr = ['mttr',
+                  'mean time to',
+                  'mean time to repair',
+                  'mean time to repairs',
+                  'repair time']
+    names_avail = ['system reliability',
+                   'availability']
     dict_num = {'MTTR':{}, 'MTBF':{}, 'System Reliability':{}}
     dict_max = {'MTTR':0, 'MTBF':0, 'System Reliability':0}
     dict_max_num = {'MTTR':0, 'MTBF':0, 'System Reliability':0}
@@ -172,10 +181,13 @@ def finding_num(b):
             b[i].name = 'MTTR'
         elif b[i].name.lower() in names_avail:
             b[i].name = 'System Reliability'
-        if ('years' or 'year' or '年' or 'год') in b[i].num:
-            num = float((b[i].num).split(' ')[0])
-            num = num * 8760
-            b[i].num = str(int(round(num))) + str(' ') + str('hours')
+        if ('years' or 'year' or 'год') in b[i].num:
+            try:
+                num = float((b[i].num).split(' ')[0])
+                num = num * 8760
+                b[i].num = int(round(num))
+            except:
+                print('Error with float')
         elif '%' in b[i].num:
             b[i].num = b[i].num.replace('%', '')
             b[i].num = float(b[i].num)/100
@@ -187,25 +199,36 @@ def finding_num(b):
                 b[i].num = float(b[i].num)
                 b[i].num = float(str(b[i].num)[:6])
             except:
-                b[i].num = float((b[i].num).replace(b[i].num[len(b[i].num)-1], ''))
-                b[i].num = float(str(b[i].num)[:6])
+                try:
+                    b[i].num = float((b[i].num).replace(b[i].num[len(b[i].num)-1], ''))
+                    b[i].num = float(str(b[i].num)[:6])
+                except:
+                    print('Error with float')
         else:
-            b[i].num = str(int(float(((b[i].num).replace(',', '')
-                                     ).split(' ')[0]))) + str(' ') + str('hours')
-        try:
-            num = int((b[i].num).split(' ')[0])
-        except:
-            num = b[i].num
+            b[i].num = b[i].num.replace(',', '').split(' ')
+            try:
+                b[i].num = int(''.join(b[i].num))
+            except:
+                del b[i].num[len(b[i].num)-1]
+                b[i].num = int(''.join(b[i].num))
         print(b[i].name, b[i].num)
         try:
-            dict_num[b[i].name][num] += 1
+            dict_num[b[i].name][b[i].num] += 1
         except:
-            dict_num[b[i].name][num] = 1
+            dict_num[b[i].name][b[i].num] = 1
     print(dict_num)
     #Matching value is the most repeatable one.
     for name in dict_num:
         for num in dict_num[name]:
             if dict_num[name][num] > dict_max_num[name]:
-                dict_max_num[name] = dict_num[name][num]
-                dict_max[name] = num
+                checker = False
+                if (name == 'MTTR' and num < 100 and num > 0):
+                    checker = True
+                if (name == 'MTBF' and num > 100000):
+                    checker = True
+                if (name == 'System Reliability' and num < 1 and num > 0):
+                    checker = True
+                if checker:
+                    dict_max_num[name] = dict_num[name][num]
+                    dict_max[name] = num
     return dict_max
