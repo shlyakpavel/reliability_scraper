@@ -115,7 +115,6 @@ def yargy_parser(path):
     #Remove line separators
     text = re.sub("^\s+|\n|\r|\s+$", '', text)
     line = text
-
     MEASURE = rule(or_(X_avail, NAME_avail, X_mttr, X_mtbf, NAME_mttr, NAME_mtbf))
     new_line = []
     #Parser #1 text preprocessing
@@ -151,6 +150,7 @@ def yargy_parser(path):
             if matches:
                 for match in matches:
                     LIST.append(match.fact)
+    print(LIST)
     return LIST
 
 def count_param(dict_max):
@@ -221,10 +221,16 @@ def finding_num(b):
             else:
                 b[link][i].num = b[link][i].num.replace(',', '').split(' ')
                 try:
-                    b[link][i].num = int(''.join(link[i].num))
-                except:
-                    del b[link][i].num[len(b[link][i].num)-1]
                     b[link][i].num = int(''.join(b[link][i].num))
+                except:
+                    try:
+                        del b[link][i].num[len(b[link][i].num)-1]
+                        b[link][i].num = int(''.join(b[link][i].num))
+                    except:
+                        try:
+                            b[link][i].num = int(float(b[link][i].num))
+                        except:
+                            print('Error')
             try:
                 dict_num[b[link][i].name][b[link][i].num] += 1
             except:
