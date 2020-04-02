@@ -115,7 +115,6 @@ def yargy_parser(path):
     #Remove line separators
     text = re.sub("^\s+|\n|\r|\s+$", '', text)
     line = text
-
     MEASURE = rule(or_(X_avail, NAME_avail, X_mttr, X_mtbf, NAME_mttr, NAME_mtbf))
     new_line = []
     #Parser #1 text preprocessing
@@ -219,12 +218,19 @@ def finding_num(b):
                     except:
                         print('Error with float')
             else:
+                #There are several options for input numbers 
+                #'1,123,234 year/hours', '1123234.5 year/hours', '1123234.5'
+                #'1 123 234 year/hours', '1 123 234'
+                #At first we replace ',' to '' and split string for grabbing the number
                 b[link][i].num = b[link][i].num.replace(',', '').split(' ')
                 try:
-                    b[link][i].num = int(''.join(link[i].num))
+                    #Here we grabbing the number if it is possible. 
+                    #This could be possible if number was without units
+                    b[link][i].num = int(float(''.join(b[link][i].num)))
                 except:
+                    #Else we delete units and remain only num
                     del b[link][i].num[len(b[link][i].num)-1]
-                    b[link][i].num = int(''.join(b[link][i].num))
+                    b[link][i].num = int(float(''.join(b[link][i].num)))
             try:
                 dict_num[b[link][i].name][b[link][i].num] += 1
             except:
