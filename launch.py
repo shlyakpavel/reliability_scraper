@@ -46,10 +46,9 @@ def process_excell(path_1, path_2):
         for link in links:
             path = fetch(link)
             fnd[link] = yargy_parser(path)
-        print(fnd)
         res = finding_num(fnd)
         for param in res.keys():
-            data_frame[param] = None;
+            data_frame[param] = None
             data_frame[param][i] = res[param]
     data_frame.to_excel(path_2)
 
