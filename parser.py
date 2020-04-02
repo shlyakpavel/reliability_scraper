@@ -158,6 +158,14 @@ def yargy_parser(path):
                     LIST.append(match.fact)
     return LIST
 
+def count_param(dict_max):
+    dict_max['Failure rate'] = 1/dict_max['MTBF']
+    dict_max['failure rate in storage mode'] = dict_max['Failure rate'] * 0.01
+    dict_max['Storage time'] = round(1/(dict_max['failure rate in storage mode']*8760), 3)
+    dict_max['Average resource'] = round((1-0.15*0.253)*dict_max['MTBF'], 3)
+    dict_max['Average lifetime'] = round(dict_max['Average resource']/8760, 3)
+    dict_max['recovery intensity'] = 1/dict_max['MTTR']
+    return dict_max
 
 def finding_num(b):
     names_mtbf = ['mtbf',
@@ -231,4 +239,5 @@ def finding_num(b):
                 if checker:
                     dict_max_num[name] = dict_num[name][num]
                     dict_max[name] = num
+    dict_max = count_param(dict_max)
     return dict_max
