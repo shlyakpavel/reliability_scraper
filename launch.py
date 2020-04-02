@@ -41,15 +41,15 @@ def process_excell(path_1, path_2):
     """
     data_frame = pd.read_excel(path_1, engine='openpyxl')
     for i, row in data_frame.iterrows():
-        links = google(row['Product'] + ' MTBF')
+        links = google(str(row['Product']) + ' MTBF')
         fnd = dict()
-        print(links)
         for link in links:
             path = fetch(link)
             fnd[link] = yargy_parser(path)
         print(fnd)
         res = finding_num(fnd)
         for param in res.keys():
+            data_frame[param] = None;
             data_frame[param][i] = res[param]
     data_frame.to_excel(path_2)
 
