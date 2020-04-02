@@ -82,9 +82,11 @@ def upload():
 def search_page():
     """Result page for the manual search entered by user on index page"""
     query = request.args.get('query')
-    links = google(query)
-    path = fetch(links)
-    fnd = yargy_parser(path)
+    links = google(query + ' mtbf')
+    fnd = dict()
+    for link in links:
+        path = fetch(link)
+        fnd[link] = yargy_parser(path)
     res = str(finding_num(fnd))
     return "Found for "+ query+": " + res
 
