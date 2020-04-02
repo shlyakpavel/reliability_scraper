@@ -159,7 +159,10 @@ def count_param(dict_max):
     except:
         dict_max['Failure rate'] = 0
     dict_max['failure rate in storage mode'] = dict_max['Failure rate'] * 0.01
-    dict_max['Storage time'] = round(1/(dict_max['failure rate in storage mode']*8760), 3)
+    try:
+        dict_max['Storage time'] = round(1/(dict_max['failure rate in storage mode']*8760), 3)
+    except:
+        dict_max['Storage time'] = 0
     dict_max['Average resource'] = round((1-0.15*0.253)*dict_max['MTBF'], 3)
     dict_max['Average lifetime'] = round(dict_max['Average resource']/8760, 3)
     try:
