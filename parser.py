@@ -116,31 +116,26 @@ def yargy_parser(path):
     text = re.sub("^\s+|\n|\r|\s+$", '', text)
     line = text
 
-    #Temporary workaround. Fix it to site by site processing later
-    num_c = 500
-    text = [line[i-5 if i-5 > 0 else 0: i + num_c + 5 if i + num_c + 5 < len(line)
-                 else len(line) -1] for i in range(0, len(line), num_c)]
     MEASURE = rule(or_(X_avail, NAME_avail, X_mttr, X_mtbf, NAME_mttr, NAME_mtbf))
     new_line = []
     #Parser #1 text preprocessing
     parser = Parser(MEASURE)
-    for line in text:
-        matches = list(parser.findall(line))
-        spans = [_.span for _ in matches]
-        new_span = [0, 0]
-        if len(spans) >= 2:
-            for i in range(0, len(spans)-1, 1):
-                mini = 1000000
-                maxi = 0
-                if spans[i][0] < mini:
-                    new_span[0] = spans[i][0]
-                    mini = spans[i][0]
-                if spans[i+1][1] > maxi:
-                    new_span[1] = spans[i+1][1]
-                    maxi = spans[i+1][1]
-                for i in range(new_span[0], new_span[1]):
-                    new_line.append(line[i])
-                new_line.append(' \n ')
+    matches = list(parser.findall(line))
+    spans = [_.span for _ in matches]
+    new_span = [0, 0]
+    if len(spans) >= 2:
+        for i in range(0, len(spans)-1, 1):
+            mini = 1000000
+            maxi = 0
+            if spans[i][0] < mini:
+                new_span[0] = spans[i][0]
+                mini = spans[i][0]
+            if spans[i+1][1] > maxi:
+                new_span[1] = spans[i+1][1]
+                maxi = spans[i+1][1]
+            for i in range(new_span[0], new_span[1]):
+                new_line.append(line[i])
+            new_line.append(' \n ')
     new_line = ''.join(new_line)
     new_line = new_line.split('\n')
     LIST = []
