@@ -116,31 +116,26 @@ def yargy_parser(path):
     text = re.sub("^\s+|\n|\r|\s+$", '', text)
     line = text
 
-    #Temporary workaround. Fix it to site by site processing later
-    num_c = 500
-    text = [line[i-5 if i-5 > 0 else 0: i + num_c + 5 if i + num_c + 5 < len(line)
-                 else len(line) -1] for i in range(0, len(line), num_c)]
     MEASURE = rule(or_(X_avail, NAME_avail, X_mttr, X_mtbf, NAME_mttr, NAME_mtbf))
     new_line = []
     #Parser #1 text preprocessing
     parser = Parser(MEASURE)
-    for line in text:
-        matches = list(parser.findall(line))
-        spans = [_.span for _ in matches]
-        new_span = [0, 0]
-        if len(spans) >= 2:
-            for i in range(0, len(spans)-1, 1):
-                mini = 1000000
-                maxi = 0
-                if spans[i][0] < mini:
-                    new_span[0] = spans[i][0]
-                    mini = spans[i][0]
-                if spans[i+1][1] > maxi:
-                    new_span[1] = spans[i+1][1]
-                    maxi = spans[i+1][1]
-                for i in range(new_span[0], new_span[1]):
-                    new_line.append(line[i])
-                new_line.append(' \n ')
+    matches = list(parser.findall(line))
+    spans = [_.span for _ in matches]
+    new_span = [0, 0]
+    if len(spans) >= 2:
+        for i in range(0, len(spans)-1, 1):
+            mini = 1000000
+            maxi = 0
+            if spans[i][0] < mini:
+                new_span[0] = spans[i][0]
+                mini = spans[i][0]
+            if spans[i+1][1] > maxi:
+                new_span[1] = spans[i+1][1]
+                maxi = spans[i+1][1]
+            for i in range(new_span[0], new_span[1]):
+                new_line.append(line[i])
+            new_line.append(' \n ')
     new_line = ''.join(new_line)
     new_line = new_line.split('\n')
     LIST = []
@@ -159,12 +154,18 @@ def yargy_parser(path):
     return LIST
 
 def count_param(dict_max):
-    dict_max['Failure rate'] = 1/dict_max['MTBF']
+    try:
+        dict_max['Failure rate'] = 1/dict_max['MTBF']
+    except:
+        dict_max['Failure rate'] = 0
     dict_max['failure rate in storage mode'] = dict_max['Failure rate'] * 0.01
     dict_max['Storage time'] = round(1/(dict_max['failure rate in storage mode']*8760), 3)
     dict_max['Average resource'] = round((1-0.15*0.253)*dict_max['MTBF'], 3)
     dict_max['Average lifetime'] = round(dict_max['Average resource']/8760, 3)
-    dict_max['recovery intensity'] = 1/dict_max['MTTR']
+    try:
+        dict_max['recovery intensity'] = 1/dict_max['MTTR']
+    except:
+        dict_max['recovery intensity'] = 0
     return dict_max
 
 def finding_num(b):
@@ -180,64 +181,68 @@ def finding_num(b):
     names_avail = ['system reliability',
                    'availability']
     dict_num = {'MTTR':{}, 'MTBF':{}, 'System Reliability':{}}
-    dict_max = {'MTTR':0, 'MTBF':0, 'System Reliability':0}
+    dict_links = {'MTTR':{}, 'MTBF':{}, 'System Reliability':{}}
+    dict_max = {'MTTR':0, 'MTBF':0, 'System Reliability':0, 'Links':[]}
     dict_max_num = {'MTTR':0, 'MTBF':0, 'System Reliability':0}
-    for i in range(len(b)):
-        if b[i].name.lower() in names_mtbf:
-            b[i].name = 'MTBF'
-        elif b[i].name.lower() in names_mttr:
-            b[i].name = 'MTTR'
-        elif b[i].name.lower() in names_avail:
-            b[i].name = 'System Reliability'
-        if ('years' or 'year' or 'год') in b[i].num:
-            try:
-                num = float((b[i].num).split(' ')[0])
-                num = num * 8760
-                b[i].num = int(round(num))
-            except:
-                print('Error with float')
-        elif '%' in b[i].num:
-            b[i].num = b[i].num.replace('%', '')
-            b[i].num = float(b[i].num)/100
-            b[i].num = float(str(b[i].num)[:6])
-        elif b[i].name == 'System Reliability':
-            try:
-                b[i].num = (b[i].num).replace(' ', '')
-                b[i].num = (b[i].num).replace(',', '.')
-                b[i].num = float(b[i].num)
-                b[i].num = float(str(b[i].num)[:6])
-            except:
+    for link in b:
+        for i in range(len(b[link])):
+            if b[link][i].name.lower() in names_mtbf:
+                b[link][i].name = 'MTBF'
+            elif b[link][i].name.lower() in names_mttr:
+                b[link][i].name = 'MTTR'
+            elif b[link][i].name.lower() in names_avail:
+                b[link][i].name = 'System Reliability'
+            if ('years' or 'year' or 'год') in b[link][i].num:
                 try:
-                    b[i].num = float((b[i].num).replace(b[i].num[len(b[i].num)-1], ''))
-                    b[i].num = float(str(b[i].num)[:6])
+                    num = float((b[link][i].num).split(' ')[0])
+                    num = num * 8760
+                    b[link][i].num = int(round(num))
                 except:
                     print('Error with float')
-        else:
-            b[i].num = b[i].num.replace(',', '').split(' ')
+            elif '%' in b[link][i].num:
+                b[link][i].num = b[link][i].num.replace('%', '')
+                b[link][i].num = float(b[link][i].num)/100
+                b[link][i].num = float(str(b[link][i].num)[:6])
+            elif b[link][i].name == 'System Reliability':
+                try:
+                    b[link][i].num = (b[link][i].num).replace(' ', '')
+                    b[link][i].num = (b[link][i].num).replace(',', '.')
+                    b[link][i].num = float(b[link][i].num)
+                    b[link][i].num = float(str(b[link][i].num)[:6])
+                except:
+                    try:
+                        b[link][i].num = float((b[link][i].num).replace(b[link][i].num[len(b[link][i].num)-1], ''))
+                        b[link][i].num = float(str(b[link][i].num)[:6])
+                    except:
+                        print('Error with float')
+            else:
+                b[link][i].num = b[link][i].num.replace(',', '').split(' ')
+                try:
+                    b[link][i].num = int(''.join(link[i].num))
+                except:
+                    del b[link][i].num[len(b[link][i].num)-1]
+                    b[link][i].num = int(''.join(b[link][i].num))
             try:
-                b[i].num = int(''.join(b[i].num))
+                dict_num[b[link][i].name][b[link][i].num] += 1
             except:
-                del b[i].num[len(b[i].num)-1]
-                b[i].num = int(''.join(b[i].num))
-        print(b[i].name, b[i].num)
-        try:
-            dict_num[b[i].name][b[i].num] += 1
-        except:
-            dict_num[b[i].name][b[i].num] = 1
-    print(dict_num)
+                dict_num[b[link][i].name][b[link][i].num] = 1
+            dict_links[b[link][i].name][b[link][i].num] = link
     #Matching value is the most repeatable one.
-    for name in dict_num:
+    for name in ['MTBF', 'MTTR', 'System Reliability']:
         for num in dict_num[name]:
             if dict_num[name][num] > dict_max_num[name]:
                 checker = False
-                if (name == 'MTTR' and num < 100 and num > 0):
+                if (name == 'MTTR' and 0 < num < 100):
                     checker = True
                 if (name == 'MTBF' and num > 100000):
                     checker = True
-                if (name == 'System Reliability' and num < 1 and num > 0):
+                if (name == 'System Reliability' and 0 < num < 1):
                     checker = True
                 if checker:
                     dict_max_num[name] = dict_num[name][num]
                     dict_max[name] = num
+                    if not dict_links[name][num] in dict_max['Links']:
+                        dict_max['Links'].append(dict_links[name][num])
     dict_max = count_param(dict_max)
+    print(dict_max)
     return dict_max

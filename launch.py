@@ -23,13 +23,13 @@ def google(query):
     lst = list(filter(None, [s.strip() for s in lst]))
     return lst
 
-def fetch(links):
-    """Fetches the pages by URLS, renders them and
+def fetch(link):
+    """Fetches the page by URL, renders it and
     outputs as text file in the current dir
     Requires "fetch.sh" bash script
     Returns a string with the output file name
     """
-    dat = ' '.join('"{0}"'.format(w) for w in links)
+    dat = '"{0}"'.format(link)
     cmd = "bash fetch.sh " + dat
     os.system(cmd)
     return "texts.txt"
@@ -41,12 +41,15 @@ def process_excell(path_1, path_2):
     """
     data_frame = pd.read_excel(path_1, engine='openpyxl')
     for i, row in data_frame.iterrows():
-        links = google(row['Product'] + ' MTBF')
-        path = fetch(links)
-        fnd = yargy_parser(path)
+        links = google(str(row['Product']) + ' MTBF')
+        fnd = dict()
+        for link in links:
+            path = fetch(link)
+            fnd[link] = yargy_parser(path)
         res = finding_num(fnd)
-        data_frame["MTBF"][i] = res["MTBF"]
-        data_frame["MTTR"][i] = res["MTTR"]
+        for param in res.keys():
+            data_frame[param] = None
+            data_frame[param][i] = res[param]
     data_frame.to_excel(path_2)
 
 
@@ -79,9 +82,11 @@ def upload():
 def search_page():
     """Result page for the manual search entered by user on index page"""
     query = request.args.get('query')
-    links = google(query)
-    path = fetch(links)
-    fnd = yargy_parser(path)
+    links = google(query + ' mtbf')
+    fnd = dict()
+    for link in links:
+        path = fetch(link)
+        fnd[link] = yargy_parser(path)
     res = str(finding_num(fnd))
     return "Found for "+ query+": " + res
 
