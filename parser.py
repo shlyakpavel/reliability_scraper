@@ -14,17 +14,9 @@ def yargy_parser(path):
 
     DOT = or_(eq('.'), eq(','))
 
-    NAME_avail = morph_pipeline(
-        [
-            'System Reliability',
-            'availability'
-        ]
-    ).interpretation(
-        RULE.name
-    )
-
     NAME_mtbf = morph_pipeline(
         [
+            'MTTF',
             'MTBF',
             'mean time between',
             'mean time between failures',
@@ -48,7 +40,6 @@ def yargy_parser(path):
     NUM_MTBF = or_(rule(INT, DOT, INT), rule(INT),
                    rule(INT, DOT, INT, DOT, INT),
                    rule(INT, INT), rule(INT, INT, INT))
-    NUM_avail = or_(rule(INT, DOT, INT))
 
     UNIT_mtbf = morph_pipeline(
         [
@@ -83,10 +74,6 @@ def yargy_parser(path):
                      RULE.num
                  )
 
-    X_avail = rule(NUM_avail, PUNCT.optional()
-                  ).interpretation(
-                      RULE.num
-                  )
     TRESH = rule(and_(not_(eq(NUM_MTBF)), or_(not_(eq(NAME_mttr)),
                                               not_(eq(NAME_mtbf))),
                       not_(eq(UNIT_mtbf)), not_(eq(DOT)),
@@ -105,17 +92,12 @@ def yargy_parser(path):
                  RULE
              )
 
-    rule_3 = (rule(NAME_avail, (TRESH.optional()).repeatable(), X_avail).repeatable()
-             ).interpretation(
-                 RULE
-             )
-
     f = open(path, 'r')
     text = f.read()
     #Remove line separators
     text = re.sub("^\s+|\n|\r|\s+$", '', text)
     line = text
-    MEASURE = rule(or_(X_avail, NAME_avail, X_mttr, X_mtbf, NAME_mttr, NAME_mtbf))
+    MEASURE = rule(or_(X_mttr, X_mtbf, NAME_mttr, NAME_mtbf))
     new_line = []
     #Parser #1 text preprocessing
     parser = Parser(MEASURE)
@@ -138,7 +120,7 @@ def yargy_parser(path):
     new_line = ''.join(new_line)
     new_line = new_line.split('\n')
     LIST = []
-    MEASURE = or_(rule_1, rule_2, rule_3).interpretation(
+    MEASURE = or_(rule_1, rule_2).interpretation(
         RULE
     )
     #Parser #2 Parsing reliability metrics.
@@ -150,6 +132,7 @@ def yargy_parser(path):
             if matches:
                 for match in matches:
                     LIST.append(match.fact)
+    print(LIST)
     return LIST
 
 def count_param(dict_max):
@@ -162,12 +145,18 @@ def count_param(dict_max):
         dict_max['Storage time'] = round(1/(dict_max['failure rate in storage mode']*8760), 3)
     except:
         dict_max['Storage time'] = 0
-    dict_max['Average resource'] = round((1-0.15*0.253)*dict_max['MTBF'], 3)
+    dict_max['Minimal resource'] = round(0.01*dict_max['MTBF'], 3)
+    dict_max['Gamma percentage resource'] = round(0.051239*dict_max['MTBF'], 3)
+    dict_max['Average resource'] = round(0.6931*dict_max['MTBF'], 3)
     dict_max['Average lifetime'] = round(dict_max['Average resource']/8760, 3)
     try:
         dict_max['recovery intensity'] = 1/dict_max['MTTR']
     except:
         dict_max['recovery intensity'] = 0
+    try:
+        dict_max['System Reliability'] = dict_max['MTBF']/(dict_max['MTBF']+dict_max['MTTR'])
+    except:
+        dict_max['System Reliability'] = 0
     return dict_max
 
 def finding_num(b):
@@ -180,20 +169,16 @@ def finding_num(b):
                   'mean time to repair',
                   'mean time to repairs',
                   'repair time']
-    names_avail = ['system reliability',
-                   'availability']
-    dict_num = {'MTTR':{}, 'MTBF':{}, 'System Reliability':{}}
-    dict_links = {'MTTR':{}, 'MTBF':{}, 'System Reliability':{}}
-    dict_max = {'MTTR':0, 'MTBF':0, 'System Reliability':0, 'Links':[]}
-    dict_max_num = {'MTTR':0, 'MTBF':0, 'System Reliability':0}
+    dict_num = {'MTTR':{}, 'MTBF':{}}
+    dict_links = {'MTTR':{}, 'MTBF':{}}
+    dict_max = {'MTTR':0, 'MTBF':0, 'Links':[]}
+    dict_max_num = {'MTTR':0, 'MTBF':0}
     for link in b:
         for i in range(len(b[link])):
             if b[link][i].name.lower() in names_mtbf:
                 b[link][i].name = 'MTBF'
             elif b[link][i].name.lower() in names_mttr:
                 b[link][i].name = 'MTTR'
-            elif b[link][i].name.lower() in names_avail:
-                b[link][i].name = 'System Reliability'
             if ('years' or 'year' or 'год') in b[link][i].num:
                 try:
                     num = float((b[link][i].num).split(' ')[0])
@@ -201,30 +186,14 @@ def finding_num(b):
                     b[link][i].num = int(round(num))
                 except:
                     print('Error with float')
-            elif '%' in b[link][i].num:
-                b[link][i].num = b[link][i].num.replace('%', '')
-                b[link][i].num = float(b[link][i].num)/100
-                b[link][i].num = float(str(b[link][i].num)[:6])
-            elif b[link][i].name == 'System Reliability':
-                try:
-                    b[link][i].num = (b[link][i].num).replace(' ', '')
-                    b[link][i].num = (b[link][i].num).replace(',', '.')
-                    b[link][i].num = float(b[link][i].num)
-                    b[link][i].num = float(str(b[link][i].num)[:6])
-                except:
-                    try:
-                        b[link][i].num = float((b[link][i].num).replace(b[link][i].num[len(b[link][i].num)-1], ''))
-                        b[link][i].num = float(str(b[link][i].num)[:6])
-                    except:
-                        print('Error with float')
             else:
-                #There are several options for input numbers 
+                #There are several options for input numbers
                 #'1,123,234 year/hours', '1123234.5 year/hours', '1123234.5'
                 #'1 123 234 year/hours', '1 123 234'
                 #At first we replace ',' to '' and split string for grabbing the number
                 b[link][i].num = b[link][i].num.replace(',', '').split(' ')
                 try:
-                    #Here we grabbing the number if it is possible. 
+                    #Here we grabbing the number if it is possible.
                     #This could be possible if number was without units
                     b[link][i].num = int(float(''.join(b[link][i].num)))
                 except:
@@ -237,15 +206,13 @@ def finding_num(b):
                 dict_num[b[link][i].name][b[link][i].num] = 1
             dict_links[b[link][i].name][b[link][i].num] = link
     #Matching value is the most repeatable one.
-    for name in ['MTBF', 'MTTR', 'System Reliability']:
+    for name in ['MTBF', 'MTTR']:
         for num in dict_num[name]:
             if dict_num[name][num] > dict_max_num[name]:
                 checker = False
                 if (name == 'MTTR' and 0 < num < 100):
                     checker = True
                 if (name == 'MTBF' and num > 100000):
-                    checker = True
-                if (name == 'System Reliability' and 0 < num < 1):
                     checker = True
                 if checker:
                     dict_max_num[name] = dict_num[name][num]
