@@ -1,14 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="/static/index.css">
 <title>Uploader</title>
 </head>
 <body>
+<script>
+function upload() {
+    window.location.href = "/upload";
+}
+</script>  
+<div id="inner">
+   <div class="logo">
+       <span class="p">P</span>
+       <span class="a">a</span>
+       <span class="r">r</span>
+       <span class="s">s</span>
+       <span class="e">e</span>
+       <span class="rz">r</span>
+   </div>
 <form action="/search" method="get">
-  <label for="query">Device:</label><br>
-  <input type="text" id="query" name="query"><br>
+  <input type="text" placeholder="Device" size="65" id="query" name="query"><br>
+  <input type="button" value="Spreadsheet" onclick='upload();'>
   <input type="submit" value="Search">
-</form> 
-<a href="/upload">Upload xls</a>
+</form>
+</div>
 </body>
 </html>

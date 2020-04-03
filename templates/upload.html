@@ -1,29 +1,39 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Upload file</title>
-<style>
-body{
-background:#ffff00	
-	}
-</style>
-<script>
-function wait(){
-  document.getElementById("state1").style.display = 'none';
-  document.getElementById("state2").style.display = 'block';
-}
-</script>
+<link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="/static/index.css">
+<title>Uploader</title>
 </head>
 <body>
-    <div id="state1">
-	<form method="POST" enctype="multipart/form-data">
-    <label for="excell">XLS file:</label><br>
-    <input type="file" id="excell" name="excell"><br>
-    <input type="submit" value="Submit" onclick='wait()'>
+<script>
+function upload() {
+    document.getElementById("form").submit();
+    document.getElementById("form").style.display = "none";
+    var timer = setInterval(function(){
+        document.getElementsByClassName('p')[0].className = "rz";
+        document.getElementsByClassName('a')[0].className = "p";
+        document.getElementsByClassName('r')[0].className = "a";
+        document.getElementsByClassName('s')[0].className = "r";
+        document.getElementsByClassName('e')[0].className = "s";
+        document.getElementsByClassName("rz")[1].className = "e";
+    }, 350);
+}
+</script>
+<div id="inner">
+   <div class="logo">
+       <span class="p">P</span>
+       <span class="a">a</span>
+       <span class="r">r</span>
+       <span class="s">s</span>
+       <span class="e">e</span>
+       <span class="rz">r</span>
+   </div>
+<form method="POST" id="form" enctype="multipart/form-data">
+    <label for="excell">XLSX file:</label>
+    <input type="file" id="excell" name="excell" onchange="upload()"><br>
     </form>
-    </div>
-    <div id="state2" style="display:none">
-    Wait, please
-    </div>
+</div>
 </body>
 </html>

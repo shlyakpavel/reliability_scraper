@@ -53,7 +53,7 @@ def process_excell(path_1, path_2):
     data_frame.to_excel(path_2)
 
 
-app = Flask(__name__)             # create an app instance
+app = Flask(__name__, static_url_path='/static', static_folder='static')             # create an app instance
 
 class ExcellForm(FlaskForm):
     """A simple class for the form used by the uploader"""
