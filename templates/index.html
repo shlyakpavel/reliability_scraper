@@ -3,6 +3,7 @@
 <head>
 <link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet">
 <link rel="stylesheet" type="text/css" href="/static/index.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Uploader</title>
 </head>
 <body>
@@ -21,7 +22,7 @@ function upload() {
        <span class="rz">r</span>
    </div>
 <form action="/search" method="get">
-  <input type="text" placeholder="Device" size="65" id="query" name="query"><br>
+  <input type="text" placeholder="Device" id="query" name="query"><br>
   <input type="button" value="Spreadsheet" onclick='upload();'>
   <input type="submit" value="Search">
 </form>
