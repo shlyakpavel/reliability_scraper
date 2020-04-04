@@ -11,7 +11,7 @@ tmp_file="$ouput_file_name.tmp"
 url="$2"
 #Detect remote file type via HEAD request
 MIME=$(curl -s -I "$url" | grep options -v --ignore-case | grep Content-Type --ignore-case)
-#Cleanup temporary files
+#Cleanup previous files
 rm -f $ouput_file $tmp_file
 if [[ $MIME == *"html"* ]]; then
   echo "Dumping web page $url"
@@ -23,3 +23,5 @@ elif [[ $MIME == *"pdf"* ]]; then
   curl "$url" -o $tmp_file
   pdftotext $tmp_file $ouput_file
 fi
+#Cleanup again
+rm -f $tmp_file

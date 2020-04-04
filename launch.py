@@ -53,6 +53,7 @@ def process_excell(path_1, path_2):
         for link in links:
             fetch(link, file_path)
             fnd[link] = yargy_parser(file_path)
+            os.remove(file_path)
         res = finding_num(fnd)
         for param in res.keys():
             data_frame[param] = None
@@ -94,6 +95,7 @@ def search_page():
     for link in links:
         fetch(link, file_path)
         fnd[link] = yargy_parser(file_path)
+        os.remove(file_path)
     res = str(finding_num(fnd))
     return "Found for "+ query+": " + res
 
