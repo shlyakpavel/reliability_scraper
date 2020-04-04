@@ -13,9 +13,9 @@ import pandas as pd
 
 from werkzeug.utils import secure_filename
 
-def get_random_path():
+def get_random_path(ext):
     """Generates random number with txt extention"""
-    path = "%d.txt" % randint(0, 100000)
+    path = str(randint(0, 100000)) + "." + ext
     return path
 
 def google(query):
@@ -46,7 +46,7 @@ def process_excell(path_1, path_2):
     Requires openpyxl
     """
     data_frame = pd.read_excel(path_1, engine='openpyxl')
-    file_path = get_random_path()
+    file_path = get_random_path("txt")
     for i, row in data_frame.iterrows():
         links = google(str(row['Product']) + ' MTBF')
         fnd = dict()
@@ -72,7 +72,8 @@ def upload():
     form = ExcellForm(csrf_enabled=False)
     if form.validate_on_submit():
         f = form.excell.data
-        filename = secure_filename(f.filename)
+        #filename = secure_filename(f.filename)
+        filename = get_random_path("xlsx")
         if not os.path.exists(app.instance_path):
             os.makedirs(app.instance_path)
             os.makedirs(app.instance_path + '/excells')
@@ -91,7 +92,7 @@ def search_page():
     query = request.args.get('query')
     links = google(query + ' mtbf')
     fnd = dict()
-    file_path = get_random_path()
+    file_path = get_random_path("txt")
     for link in links:
         fetch(link, file_path)
         fnd[link] = yargy_parser(file_path)
