@@ -131,12 +131,15 @@ def yargy_parser(path):
     #Parser #2 Parsing reliability metrics.
     parser = Parser(MEASURE)
     for line in new_line:
-        matches = list(parser.findall(line))
-        spans = [_.span for _ in matches]
-        if spans != []:
-            if matches:
-                for match in matches:
-                    LIST.append(match.fact)
+        try:
+            matches = list(parser.findall(line))
+            spans = [_.span for _ in matches]
+            if spans != []:
+                if matches:
+                    for match in matches:
+                        LIST.append(match.fact)
+        except:
+            print('Yargy failure: you normally don`t need to report that to us.')
     print(LIST)
     return LIST
 
@@ -168,7 +171,10 @@ def count_param(dict_max):
     return dict_max
 
 def finding_num(b):
-    names_mtbf = ['mtbf',
+    #MTTF is listed as a synonym to MBTF as their difference is
+    #more about recovery than about the time. They are almost
+    #identical then it comes to calculating probabilities
+    names_mtbf = ['mtbf', 'mttf',
                   'mean time between',
                   'mean time between failures',
                   'mean time between failure',]
