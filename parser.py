@@ -50,7 +50,8 @@ def yargy_parser(path):
             'год',
             'час',
             'h',
-            'ч'
+            'ч',
+            'тыс. часов'
         ]
     )
 
@@ -193,6 +194,13 @@ def finding_num(b):
                     b[link][i].num = int(round(num))
                 except:
                     print('Error with float')
+            elif 'тыс. часов' in b[link][i].num:
+                try:
+                    num = float((b[link][i].num).split(' ')[0])
+                    num = num * 1000
+                    b[link][i].num = int(round(num))
+                except:
+                    print('Error with float')
             else:
                 #There are several options for input numbers
                 #'1,123,234 year/hours', '1123234.5 year/hours', '1123234.5'
@@ -219,7 +227,7 @@ def finding_num(b):
                 checker = False
                 if (name == 'MTTR' and 0 < num < 100):
                     checker = True
-                if (name == 'MTBF' and num > 100000):
+                if (name == 'MTBF' and num > 50000):
                     checker = True
                 if checker:
                     dict_max_num[name] = dict_num[name][num]
