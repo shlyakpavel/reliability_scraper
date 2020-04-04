@@ -131,12 +131,15 @@ def yargy_parser(path):
     #Parser #2 Parsing reliability metrics.
     parser = Parser(MEASURE)
     for line in new_line:
-        matches = list(parser.findall(line))
-        spans = [_.span for _ in matches]
-        if spans != []:
-            if matches:
-                for match in matches:
-                    LIST.append(match.fact)
+        try:
+            matches = list(parser.findall(line))
+            spans = [_.span for _ in matches]
+            if spans != []:
+                if matches:
+                    for match in matches:
+                        LIST.append(match.fact)
+        except:
+            print('Yargy failure: you normally don`t need to report that to us.')
     print(LIST)
     return LIST
 
