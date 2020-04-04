@@ -56,7 +56,8 @@ def process_excell(path_1, path_2):
             os.remove(file_path)
         res = finding_num(fnd)
         for param in res.keys():
-            data_frame[param] = None
+            if param not in data_frame.columns:
+                data_frame[param] = None
             data_frame[param][i] = res[param]
     data_frame.to_excel(path_2)
 
