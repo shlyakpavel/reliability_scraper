@@ -7,10 +7,16 @@ from flask import Flask
 from flask import render_template, redirect, url_for, request, send_file
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
+from random import randint
 
 import pandas as pd
 
 from werkzeug.utils import secure_filename
+
+def get_random_path():
+    """Generates random number with txt extention"""
+    path = "%d.txt" % randint(0, 100000)
+    return path
 
 def google(query):
     """Searches the query in Google
@@ -23,13 +29,12 @@ def google(query):
     lst = list(filter(None, [s.strip() for s in lst]))
     return lst
 
-def fetch(link):
+def fetch(link, file_name):
     """Fetches the page by URL, renders it and
     outputs as text file in the current dir
     Requires "fetch.sh" bash script
     Returns a string with the output file name
     """
-    file_name = "texts.txt"
     dat = '"{0}"'.format(link)
     cmd = f"bash fetch.sh {file_name} {dat}"
     os.system(cmd)
@@ -41,20 +46,20 @@ def process_excell(path_1, path_2):
     Requires openpyxl
     """
     data_frame = pd.read_excel(path_1, engine='openpyxl')
+    file_path = get_random_path()
     for i, row in data_frame.iterrows():
         links = google(str(row['Product']) + ' MTBF')
         fnd = dict()
         for link in links:
-            path = fetch(link)
-            fnd[link] = yargy_parser(path)
+            fetch(link, file_path)
+            fnd[link] = yargy_parser(file_path)
         res = finding_num(fnd)
         for param in res.keys():
             data_frame[param] = None
             data_frame[param][i] = res[param]
     data_frame.to_excel(path_2)
 
-
-app = Flask(__name__, static_url_path='/static', static_folder='static')             # create an app instance
+app = Flask(__name__, static_url_path='/static', static_folder='static')
 
 class ExcellForm(FlaskForm):
     """A simple class for the form used by the uploader"""
@@ -85,9 +90,10 @@ def search_page():
     query = request.args.get('query')
     links = google(query + ' mtbf')
     fnd = dict()
+    file_path = get_random_path()
     for link in links:
-        path = fetch(link)
-        fnd[link] = yargy_parser(path)
+        fetch(link, file_path)
+        fnd[link] = yargy_parser(file_path)
     res = str(finding_num(fnd))
     return "Found for "+ query+": " + res
 
