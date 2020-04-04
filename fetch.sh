@@ -4,16 +4,16 @@
 #### Where output - path to output file
 #### URL - the adress to FETCH
 #### Author: Pavel Shlyak
-#Output file path
+# Output file path
 ouput_file="$1"
-#Unencoded temporary file path
+# Unencoded temporary file path
 tmp_file="$ouput_file_name.tmp"
 url="$2"
-#Detect remote file type via HEAD request
+# Detect remote file type via HEAD request
 MIME=$(curl -s -I "$url" | grep options -v --ignore-case | grep Content-Type --ignore-case)
-#Cleanup previous files
+# Cleanup previous files
 rm -f $ouput_file $tmp_file
-if [[ $MIME == *"html"* ]]; then
+if [[ $MIME == *"htm"* ]]; then
   echo "Dumping web page $url"
   links -dump "$url" > $tmp_file
   CHARSET="$(file -bi $tmp_file|awk -F "=" '{print $2}')"
@@ -23,5 +23,8 @@ elif [[ $MIME == *"pdf"* ]]; then
   curl "$url" -o $tmp_file
   pdftotext $tmp_file $ouput_file
 fi
-#Cleanup again
+# It is possible that reported MIME is incorrect or the URL leads
+# to unsupported format. Such files should not be processed.
+touch $ouput_file
+# Cleanup again
 rm -f $tmp_file
