@@ -171,7 +171,10 @@ def count_param(dict_max):
     return dict_max
 
 def finding_num(b):
-    names_mtbf = ['mtbf',
+    #MTTF is listed as a synonym to MBTF as their difference is
+    #more about recovery than about the time. They are almost
+    #identical then it comes to calculating probabilities
+    names_mtbf = ['mtbf', 'mttf',
                   'mean time between',
                   'mean time between failures',
                   'mean time between failure',]
