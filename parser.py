@@ -154,7 +154,10 @@ def count_param(dict_max):
     except:
         dict_max['recovery intensity'] = 0
     try:
-        dict_max['System Reliability'] = dict_max['MTBF']/(dict_max['MTBF']+dict_max['MTTR'])
+        if (dict_max['MTBF'] != 0 and dict_max['MTTR'] != 0):
+            dict_max['System Reliability'] = dict_max['MTBF']/(dict_max['MTBF']+dict_max['MTTR'])
+        else:
+            dict_max['System Reliability'] = 0
     except:
         dict_max['System Reliability'] = 0
     return dict_max
