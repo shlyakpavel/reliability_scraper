@@ -32,9 +32,11 @@ input[type="button"] {
 input[type="submit"] {
     width: 10em;  height: 2em;
 }
-span.p{color:#002F76;}
-span.a{color:#003191;}
+span.s{color:#002F76;}
+span.c{color:#003191;}
 span.r{color:#5164FF;}
-span.s{color:#96BDFF;}
+span.a{color:#96BDFF;}
+span.p{color:#bcabff;}
 span.e{color:#C46DFF;}
 span.rz{color:#8928FF;}
+

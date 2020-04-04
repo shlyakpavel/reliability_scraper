@@ -13,21 +13,23 @@ function upload() {
     document.getElementById("form").submit();
     document.getElementById("form").style.display = "none";
     var timer = setInterval(function(){
-        document.getElementsByClassName('p')[0].className = "rz";
-        document.getElementsByClassName('a')[0].className = "p";
-        document.getElementsByClassName('r')[0].className = "a";
-        document.getElementsByClassName('s')[0].className = "r";
-        document.getElementsByClassName('e')[0].className = "s";
+        document.getElementsByClassName('s')[0].className = "rz";
+        document.getElementsByClassName('c')[0].className = "s";
+        document.getElementsByClassName('r')[0].className = "c";
+        document.getElementsByClassName('a')[0].className = "r";
+        document.getElementsByClassName('p')[0].className = "a";
+        document.getElementsByClassName('e')[0].className = "p";
         document.getElementsByClassName("rz")[1].className = "e";
     }, 350);
 }
 </script>
 <div id="inner">
    <div class="logo">
-       <span class="p">P</span>
-       <span class="a">a</span>
+       <span class="s">S</span>
+       <span class="c">c</span>
        <span class="r">r</span>
-       <span class="s">s</span>
+       <span class="a">a</span>
+       <span class="p">p</span>
        <span class="e">e</span>
        <span class="rz">r</span>
    </div>
