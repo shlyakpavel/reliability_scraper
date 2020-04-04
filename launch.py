@@ -29,10 +29,11 @@ def fetch(link):
     Requires "fetch.sh" bash script
     Returns a string with the output file name
     """
+    file_name = "texts.txt"
     dat = '"{0}"'.format(link)
-    cmd = "bash fetch.sh " + dat
+    cmd = f"bash fetch.sh {file_name} {dat}"
     os.system(cmd)
-    return "texts.txt"
+    return file_name
 
 def process_excell(path_1, path_2):
     """Reads the spreadsheet (path_1),
