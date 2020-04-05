@@ -3,7 +3,13 @@ import os
 from parser import yargy_parser
 from parser import finding_num
 
-import redis
+from sqlalchemy import select, create_engine, insert
+import os
+from models import (
+    device as device_table,
+    link as link_table
+)
+
 from flask import Flask
 from flask import render_template, redirect, url_for, request, send_file
 from flask_wtf import FlaskForm
@@ -62,6 +68,7 @@ def process_excell(path_1, path_2):
             data_frame[param][i] = res[param]
     data_frame.to_excel(path_2)
 
+
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 
 class ExcellForm(FlaskForm):
@@ -92,7 +99,17 @@ def upload():
 def search_page():
     """Result page for the manual search entered by user on index page"""
     query = request.args.get('query')
-    return r.get(query) or search_by_query(query)
+    
+    device_query = select(
+        device_table.c, device_table
+    ).where(device_table.c.query == query)
+    query_result = engine.execute(
+        device_query
+    ).fetchone()
+    if query_result:
+        return dict(query_result)
+
+    return search_by_query(query)
 
 
 def search_by_query(query: str) -> str:
@@ -103,9 +120,28 @@ def search_by_query(query: str) -> str:
         fetch(link, file_path)
         fnd[link] = yargy_parser(file_path)
         os.remove(file_path)
-    res = str(finding_num(fnd))
-    r.set(query, res)
-    return f'Found for "{query}: {res}'
+    res = finding_num(fnd)
+    res['query'] = query
+
+    # patch column names
+    
+    for k, v in res.copy().items():
+        new_k  = '_'.join(k.lower().split())
+        res[new_k] = res.pop(k)
+    links = res.pop('links', [])
+    device_id = engine.execute(
+        insert(device_table, values=res).\
+        returning(device_table.c.id)
+    ).fetchone()[0]
+
+    for link in links:
+        engine.execute(
+            insert(link_table, values={
+                'link': link,
+                'device_id': device_id
+            })
+        )
+    return res
 
 
 @app.route('/')
@@ -128,5 +164,8 @@ def result():
 
 
 if __name__ == '__main__':
-    r = redis.Redis(host='redis', port=6379, db=0)
-    app.run(debug=True, host='0.0.0.0')                     # run the flask app
+    engine = create_engine(
+        'postgresql://postgres:docker@postgres:5432',
+        echo = True
+    )
+    app.run(debug=True, host='0.0.0.0')

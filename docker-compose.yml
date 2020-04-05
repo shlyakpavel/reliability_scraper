@@ -1,11 +1,12 @@
 version: '3.4'
 
 services:
-  redis:
-    image: redis
+  postgres:
+    image: postgres
     environment:
-      ALLOW_EMPTY_PASSWORD: 'yes'
-      REDIS_REPLICATION_MODE: 'master'
+      POSTGRES_PASSWORD: 'docker'
+    ports:
+      - '5432:5432'
 
 
   app:
@@ -15,13 +16,16 @@ services:
 
     command: >
       bash -c '
+        sleep 5
+        python3 models.py
         python3 launch.py
       '
     ports:
-      - "5000:5000"
+      - '5000:5000'
     
     working_dir: /app/
-
+    
     links:
-      - redis
-
+      - postgres
+    volumes:
+      - ./:/app

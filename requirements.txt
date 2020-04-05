@@ -3,4 +3,5 @@ flask-wtf
 flask
 pandas
 openpyxl
-redis
+psycopg2-binary
+SQLAlchemy
