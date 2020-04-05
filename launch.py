@@ -13,10 +13,12 @@ import pandas as pd
 
 from werkzeug.utils import secure_filename
 
+
 def get_random_path(ext):
     """Generates random number with txt extention"""
     path = str(randint(0, 100000)) + "." + ext
     return path
+
 
 def google(query):
     """Searches the query in Google
@@ -29,6 +31,7 @@ def google(query):
     lst = list(filter(None, [s.strip() for s in lst]))
     return lst
 
+
 def fetch(link, file_name):
     """Fetches the page by URL, renders it and
     outputs as text file in the current dir
@@ -39,6 +42,7 @@ def fetch(link, file_name):
     cmd = f"bash fetch.sh {file_name} {dat}"
     os.system(cmd)
     return file_name
+
 
 def process_excell(path_1, path_2):
     """Reads the spreadsheet (path_1),
@@ -61,11 +65,14 @@ def process_excell(path_1, path_2):
             data_frame[param][i] = res[param]
     data_frame.to_excel(path_2)
 
+
 app = Flask(__name__, static_url_path='/static', static_folder='static')
+
 
 class ExcellForm(FlaskForm):
     """A simple class for the form used by the uploader"""
     excell = FileField(validators=[FileRequired()])
+
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
@@ -99,11 +106,13 @@ def search_page():
         fnd[link] = yargy_parser(file_path)
         os.remove(file_path)
     res = str(finding_num(fnd))
-    return "Found for "+ query+": " + res
+    return f'Found for "{query}: {res}'
+
 
 @app.route('/')
 def index_page():
     return render_template('index.html')
+
 
 @app.route('/result')
 def result():
@@ -112,11 +121,13 @@ def result():
     fn = secure_filename(filename)
     path = os.path.join(
         app.instance_path, 'excells', fn
-        )
+    )
     path_res = os.path.join(
         app.instance_path, 'excells', 'res_' + fn
-        )
+    )
     process_excell(path, path_res)
     return send_file(path_res, as_attachment=True)
 
-app.run(debug=True, host='0.0.0.0')                     # run the flask app
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0')                     # run the flask app
