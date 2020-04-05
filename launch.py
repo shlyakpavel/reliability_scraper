@@ -1,4 +1,6 @@
 import os
+from random import randint
+from threading import Thread
 
 from parser import yargy_parser
 from parser import finding_num
@@ -7,11 +9,12 @@ from flask import Flask
 from flask import render_template, redirect, url_for, request, send_file
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
-from random import randint
 
 import pandas as pd
 
 from werkzeug.utils import secure_filename
+
+THREADS = {}
 
 def get_random_path(ext):
     """Generates random number with txt extention"""
@@ -107,16 +110,37 @@ def index_page():
 
 @app.route('/result')
 def result():
-    """Returns the final xls to the user"""
+    """Start processing and wait for the result on this page"""
     filename = request.args['filename']  # counterpart for url_for()
-    fn = secure_filename(filename)
+    secure_fn = secure_filename(filename)
     path = os.path.join(
-        app.instance_path, 'excells', fn
+        app.instance_path, 'excells', secure_fn
         )
     path_res = os.path.join(
-        app.instance_path, 'excells', 'res_' + fn
+        app.instance_path, 'excells', 'res_' + secure_fn
         )
-    process_excell(path, path_res)
+    thread = Thread(target=process_excell, args=(path, path_res,))
+    thread.daemon = True
+    thread.start()
+    THREADS[filename] = thread
+    return render_template('result.html', status_url='/status?filename=' + filename,
+                           download_url='/download?filename=' + filename,)
+
+@app.route('/status')
+def status():
+    """Returns True is the thread is still running, False otherwise"""
+    filename = request.args['filename']
+    return str(THREADS[filename].isAlive())
+
+@app.route('/download')
+def download():
+    """Return XLSX to user"""
+    filename = request.args['filename']  # counterpart for url_for()
+    secure_fn = secure_filename(filename)
+    path_res = os.path.join(
+        app.instance_path, 'excells', 'res_' + secure_fn
+        )
+    secure_fn = secure_filename(filename)
     return send_file(path_res, as_attachment=True)
 
 app.run(debug=True, host='0.0.0.0')                     # run the flask app
