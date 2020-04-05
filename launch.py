@@ -3,6 +3,7 @@ import os
 from parser import yargy_parser
 from parser import finding_num
 
+import redis
 from flask import Flask
 from flask import render_template, redirect, url_for, request, send_file
 from flask_wtf import FlaskForm
@@ -98,6 +99,10 @@ def upload():
 def search_page():
     """Result page for the manual search entered by user on index page"""
     query = request.args.get('query')
+    return r.get(query) or search_by_query(query)
+
+
+def search_by_query(query: str) -> str:
     links = google(query + ' mtbf')
     fnd = dict()
     file_path = get_random_path("txt")
@@ -106,6 +111,7 @@ def search_page():
         fnd[link] = yargy_parser(file_path)
         os.remove(file_path)
     res = str(finding_num(fnd))
+    r.set(query, res)
     return f'Found for "{query}: {res}'
 
 
@@ -130,4 +136,5 @@ def result():
 
 
 if __name__ == '__main__':
+    r = redis.Redis(host='redis', port=6379, db=0)
     app.run(debug=True, host='0.0.0.0')                     # run the flask app

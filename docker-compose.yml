@@ -1,0 +1,27 @@
+version: '3.4'
+
+services:
+  redis:
+    image: redis
+    environment:
+      ALLOW_EMPTY_PASSWORD: 'yes'
+      REDIS_REPLICATION_MODE: 'master'
+
+
+  app:
+    build:
+      context: .  
+      # target: ingles
+
+    command: >
+      bash -c '
+        python3 launch.py
+      '
+    ports:
+      - "5000:5000"
+    
+    working_dir: /app/
+
+    links:
+      - redis
+
