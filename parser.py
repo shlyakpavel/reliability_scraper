@@ -170,6 +170,45 @@ def count_param(dict_max):
         dict_max['System Reliability'] = 0
     return dict_max
 
+def strip_num(string):
+    """There are several options for input numbers
+    '1,123,234 year/hours', '1123234.5 year/hours', '1123234.5'
+    '1 123 234 year/hours', '1 123 234'
+    """
+    #At first we replace ',' to '' and split string for grabbing the number
+    src_list = string.replace(',', '').split(' ')
+    #TODO: avoid try-except
+    try:
+        #Here we grab the number when possible.
+        #This is possible when the number is without a unit
+        number = int(float(''.join(src_list)))
+    except:
+        #Delete the unit so only num remains
+        del src_list[-1]
+        number = int(float(''.join(src_list)))
+    return number
+
+def to_hours(string):
+    """ Converts stuff like '13 years' or '13 тыс. часов' into hours"""
+    if ('years' or 'year' or 'год') in string:
+        try:
+            num = float((string).split(' ')[0])
+            num = num * 8760
+            result = int(round(num))
+        except:
+            print('Error with float')
+    #Todo: apply all possible cases
+    elif 'тыс. часов' in string:
+        try:
+            num = float((string).split(' ')[0])
+            num = num * 1000
+            result = int(round(num))
+        except:
+            print('Error with float')
+    else:
+        result = strip_num(string)
+    return result
+
 def finding_num(b):
     #MTTF is listed as a synonym to MBTF as their difference is
     #more about recovery than about the time. They are almost
@@ -189,38 +228,12 @@ def finding_num(b):
     dict_max_num = {'MTTR':0, 'MTBF':0}
     for link in b:
         for i in range(len(b[link])):
+            #Unify titles
             if b[link][i].name.lower() in names_mtbf:
                 b[link][i].name = 'MTBF'
             elif b[link][i].name.lower() in names_mttr:
                 b[link][i].name = 'MTTR'
-            if ('years' or 'year' or 'год') in b[link][i].num:
-                try:
-                    num = float((b[link][i].num).split(' ')[0])
-                    num = num * 8760
-                    b[link][i].num = int(round(num))
-                except:
-                    print('Error with float')
-            elif 'тыс. часов' in b[link][i].num:
-                try:
-                    num = float((b[link][i].num).split(' ')[0])
-                    num = num * 1000
-                    b[link][i].num = int(round(num))
-                except:
-                    print('Error with float')
-            else:
-                #There are several options for input numbers
-                #'1,123,234 year/hours', '1123234.5 year/hours', '1123234.5'
-                #'1 123 234 year/hours', '1 123 234'
-                #At first we replace ',' to '' and split string for grabbing the number
-                b[link][i].num = b[link][i].num.replace(',', '').split(' ')
-                try:
-                    #Here we grabbing the number if it is possible.
-                    #This could be possible if number was without units
-                    b[link][i].num = int(float(''.join(b[link][i].num)))
-                except:
-                    #Else we delete units and remain only num
-                    del b[link][i].num[len(b[link][i].num)-1]
-                    b[link][i].num = int(float(''.join(b[link][i].num)))
+            b[link][i].num = to_hours(b[link][i].num)
             try:
                 dict_num[b[link][i].name][b[link][i].num] += 1
             except:
