@@ -51,17 +51,19 @@ def process_excell(path_1, path_2):
     data_frame = pd.read_excel(path_1, engine='openpyxl')
     file_path = get_random_path("txt")
     for i, row in data_frame.iterrows():
-        links = google(str(row['Product']) + ' MTBF')
-        fnd = dict()
-        for link in links:
-            fetch(link, file_path)
-            fnd[link] = yargy_parser(file_path)
-            os.remove(file_path)
-        res = finding_num(fnd)
-        for param in res.keys():
-            if param not in data_frame.columns:
-                data_frame[param] = None
-            data_frame[param][i] = res[param]
+        prod = str(row['Product'])
+        if prod != 'nan':
+            links = google(prod + ' MTBF')
+            fnd = dict()
+            for link in links:
+                fetch(link, file_path)
+                fnd[link] = yargy_parser(file_path)
+                os.remove(file_path)
+            res = finding_num(fnd)
+            for param in res.keys():
+                if param not in data_frame.columns:
+                    data_frame[param] = None
+                data_frame[param][i] = res[param]
     data_frame.to_excel(path_2)
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
