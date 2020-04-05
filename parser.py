@@ -254,7 +254,7 @@ def finding_num(parsed):
         for first_value, second_value in itertools.permutations(counted_values.keys(), 2):
             if first_value in deleted or second_value in deleted:
                 continue
-            delta = 100 * abs(first_value - second_value) / mean(first_value, second_value)
+            delta = 100 * abs(first_value - second_value) / mean([first_value, second_value])
             #If the difference is less than delta and values are not equal
             #Keep in mind we are iterating the same dict twice
             if delta < max_delta:
