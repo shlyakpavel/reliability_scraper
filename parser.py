@@ -187,9 +187,12 @@ def strip_num(string):
         #This is possible when the number is without a unit
         number = int(float(''.join(src_list)))
     except:
-        #Delete the unit so only num remains
-        del src_list[-1]
-        number = int(float(''.join(src_list)))
+        try:
+            #Delete the unit so only num remains
+            del src_list[-1]
+            number = int(float(''.join(src_list)))
+       except:
+            number = 0
     return number
 
 def to_hours(string):
