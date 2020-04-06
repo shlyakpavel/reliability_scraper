@@ -88,16 +88,16 @@ def process_excell(path_1, path_2):
                 ).fetchall()
             ]
             result_dict['links'] = links
-            result_dict.pop('id', None)
-            result_list.append(
-                result_dict
-            )
+        
         else:
-            result = search_by_query(query)
-            result.pop('id', None)
-            result_list.append(
-                result
-            )
+            result_dict = search_by_query(query)
+
+        result_dict['links'] = ', '.join(result_dict['links'])
+        result_dict.pop('id', None)
+        result_list.append(
+            result_dict
+        )
+            
     
     result_df = pd.DataFrame(result_list)
     result_df.columns = [
@@ -109,10 +109,10 @@ def process_excell(path_1, path_2):
     result_df.to_excel(path_2)
 
 
-
 class ExcellForm(FlaskForm):
     """A simple class for the form used by the uploader"""
     excell = FileField(validators=[FileRequired()])
+
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
@@ -168,9 +168,14 @@ def search_by_query(query: str) -> str:
         os.remove(file_path)
     res = finding_num(fnd)
     res['query'] = query
-
+    
     # patch column names
     res = _patch_dict_keys(res)
+
+    # if all props == 0, skip saving in DB
+    if res['mttr'] == 0 and res['mtbf'] == 0:
+        print("Nothing to save")
+        return res
     
     links = res.pop('links', [])
     device_id = engine.execute(
@@ -185,6 +190,7 @@ def search_by_query(query: str) -> str:
                 'device_id': device_id
             })
         )
+    res['links'] = links
     return res
 
 
