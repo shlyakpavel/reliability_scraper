@@ -181,6 +181,7 @@ def search_by_query(query: str) -> str:
                 'device_id': device_id
             })
         )
+    res['links'] = links
     return res
 
 
