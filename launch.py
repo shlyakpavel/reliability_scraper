@@ -5,6 +5,13 @@ from threading import Thread
 from parser import yargy_parser
 from parser import finding_num
 
+from sqlalchemy import select, create_engine, insert
+import os
+from models import (
+    device as device_table,
+    link as link_table
+)
+
 from flask import Flask
 from flask import render_template, redirect, url_for, request, send_file
 from flask_wtf import FlaskForm
@@ -13,6 +20,14 @@ from flask_wtf.file import FileField, FileRequired
 import pandas as pd
 
 from werkzeug.utils import secure_filename
+
+
+app = Flask(
+    __name__,
+    static_url_path='/static',
+    static_folder='static'
+)
+
 
 THREADS = {}
 
@@ -50,26 +65,50 @@ def process_excell(path_1, path_2):
     """
     data_frame = pd.read_excel(path_1, engine='openpyxl')
     file_path = get_random_path("txt")
-    for i, row in data_frame.iterrows():
-        prod = str(row['Product'])
-        if prod != 'nan':
-            links = google(prod + ' MTBF')
-            fnd = dict()
-            for link in links:
-                fetch(link, file_path)
-                fnd[link] = yargy_parser(file_path)
-                os.remove(file_path)
-            res = finding_num(fnd)
-            for param in res.keys():
-                if param not in data_frame.columns:
-                    data_frame[param] = None
-                if param != 'Links':
-                    data_frame[param][i] = res[param]
-                else:
-                    data_frame[param][i] = ' , '.join(res[param])
-    data_frame.to_excel(path_2)
 
-app = Flask(__name__, static_url_path='/static', static_folder='static')
+    QUERY_COLUMN = 'Product'
+    result_list = []
+    for query in data_frame[QUERY_COLUMN]:
+        if str(query) == 'nan':
+          continue
+        select_query = select(
+            device_table.c,
+            device_table
+        ).where(
+            device_table.c.query == query
+        )
+        query_result = engine.execute(select_query).fetchone()
+        if query_result:
+            result_dict = dict(query_result)
+            links = [
+                row[0] for row in 
+                engine.execute(
+                select([link_table.c.link], link_table).where(
+                    link_table.c.device_id == result_dict['id'])
+                ).fetchall()
+            ]
+            result_dict['links'] = links
+            result_dict.pop('id', None)
+            result_list.append(
+                result_dict
+            )
+        else:
+            result = search_by_query(query)
+            result.pop('id', None)
+            result_list.append(
+                result
+            )
+    
+    result_df = pd.DataFrame(result_list)
+    result_df.columns = [
+        ' '.join(col.split('_')).capitalize()
+        for col in result_df.columns
+    ]
+    result_df = result_df.rename(columns={"Query": QUERY_COLUMN})
+
+    result_df.to_excel(path_2)
+
+
 
 class ExcellForm(FlaskForm):
     """A simple class for the form used by the uploader"""
@@ -99,6 +138,27 @@ def upload():
 def search_page():
     """Result page for the manual search entered by user on index page"""
     query = request.args.get('query')
+    
+    device_query = select(
+        device_table.c, device_table
+    ).where(device_table.c.query == query)
+    query_result = engine.execute(
+        device_query
+    ).fetchone()
+    if query_result:
+        return dict(query_result)
+
+    return search_by_query(query)
+
+
+def _patch_dict_keys(dict_):
+    for k, v in dict_.copy().items():
+        new_k  = '_'.join(k.lower().split())
+        dict_[new_k] = dict_.pop(k)
+    return dict_
+
+
+def search_by_query(query: str) -> str:
     links = google(query + ' mtbf')
     fnd = dict()
     file_path = get_random_path("txt")
@@ -106,8 +166,27 @@ def search_page():
         fetch(link, file_path)
         fnd[link] = yargy_parser(file_path)
         os.remove(file_path)
-    res = str(finding_num(fnd))
-    return "Found for "+ query+": " + res
+    res = finding_num(fnd)
+    res['query'] = query
+
+    # patch column names
+    res = _patch_dict_keys(res)
+    
+    links = res.pop('links', [])
+    device_id = engine.execute(
+        insert(device_table, values=res).\
+        returning(device_table.c.id)
+    ).fetchone()[0]
+
+    for link in links:
+        engine.execute(
+            insert(link_table, values={
+                'link': link,
+                'device_id': device_id
+            })
+        )
+    return res
+
 
 @app.route('/')
 def index_page():
@@ -148,4 +227,10 @@ def download():
     secure_fn = secure_filename(filename)
     return send_file(path_res, as_attachment=True)
 
-app.run(debug=True, host='0.0.0.0')                     # run the flask app
+
+if __name__ == '__main__':
+    engine = create_engine(
+        'postgresql://postgres:docker@postgres:5432',
+        echo=True
+    )
+    app.run(debug=True, host='0.0.0.0')

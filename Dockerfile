@@ -9,9 +9,8 @@ RUN rm -rf /var/lib/apt/lists /var/lib/cache/* /var/log/*
 WORKDIR /app
 
 # Copy project files
-COPY . .
-
-RUN python3 -m pip install -r requirements.txt
+COPY requirements.txt requirements.txt
+RUN python3 -m pip install -r requirements.txt --no-use-pep517
 
 #Publish port 5000 (default for flask)
 EXPOSE 5000
