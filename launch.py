@@ -216,7 +216,7 @@ def status():
     filename = request.args['filename']
     if filename not in THREADS:
         return "Error! File was not uploaded in this session"
-    return str(THREADS[filename].isAlive())
+    return str(THREADS[filename].is_alive())
 
 @app.route('/download')
 def download():
