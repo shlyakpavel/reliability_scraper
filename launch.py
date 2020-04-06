@@ -6,7 +6,7 @@ from parser import yargy_parser
 from parser import finding_num
 
 from sqlalchemy import select, create_engine, insert
-import os
+
 from models import (
     device as device_table,
     link as link_table
