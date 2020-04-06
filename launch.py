@@ -173,22 +173,8 @@ def search_by_query(query: str) -> str:
     res = _patch_dict_keys(res)
 
     # if all props == 0, skip saving in DB
-    if all(
-        res.get(prop, 0) == 0 
-        for prop in [
-            'mttr'
-            'mtbf'
-            'failure_rate'
-            'failure_rate_in_storage_mode'
-            'storage_time'
-            'minimal_resource'
-            'gamma_percentage_resource'
-            'average_resource'
-            'average_lifetime'
-            'recovery_intensity'
-            'system_reliability'
-        ]
-    ):
+    if res['mttr'] == 0 and res['mtbf'] == 0:
+        print("Nothing to save")
         return res
     
     links = res.pop('links', [])
