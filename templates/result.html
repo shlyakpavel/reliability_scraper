@@ -1,0 +1,53 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="/static/index.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uploader</title>
+</head>
+<body>
+<script>
+function httpGet(theUrl)
+{
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", theUrl, false ); // false for synchronous request
+    xmlHttp.send( null );
+    return xmlHttp.responseText;
+}
+function upload() {
+    var timer = setInterval(function(){
+        //Redraw
+        document.getElementsByClassName('s')[0].className = "rz";
+        document.getElementsByClassName('c')[0].className = "s";
+        document.getElementsByClassName('r')[0].className = "c";
+        document.getElementsByClassName('a')[0].className = "r";
+        document.getElementsByClassName('p')[0].className = "a";
+        document.getElementsByClassName('e')[0].className = "p";
+        document.getElementsByClassName("rz")[1].className = "e";
+        //Request status
+        a = httpGet("{{ status_url }}");
+        if (a == "False"){
+           clearInterval(timer);
+           document.getElementById("done").style.display="block";
+           document.location.href = "{{ download_url }}"
+        }
+    }, 1000);
+}
+upload();
+</script>
+<div id="inner">
+   <div class="logo">
+       <span class="s">S</span>
+       <span class="c">c</span>
+       <span class="r">r</span>
+       <span class="a">a</span>
+       <span class="p">p</span>
+       <span class="e">e</span>
+       <span class="rz">r</span>
+   </div>
+   <div id="done" style="display:none">Done! Download will start automatically</div>
+</div>
+</body>
+</html>

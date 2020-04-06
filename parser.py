@@ -1,4 +1,7 @@
 import re
+import itertools
+from statistics import mean
+from collections import Counter
 from yargy.interpretation import fact
 from yargy import rule, Parser, or_, not_, and_
 from yargy.predicates import eq, type
@@ -100,7 +103,8 @@ def yargy_parser(path):
     line = text
     #Temporary workaround. Remove it as the performance grows
     n = 10000
-    text = [line[i-5 if i-5>0 else 0:i+n+5 if i+n+5 < len(line) else len(line) -1] for i in range(0, len(line), n)]
+    text = [line[i-5 if i-5 > 0 else 0:i+n+5 if i+n+5 < len(line)
+                 else len(line) -1] for i in range(0, len(line), n)]
     MEASURE = rule(or_(X_mttr, X_mtbf, NAME_mttr, NAME_mtbf))
     new_line = []
     #Parser #1 text preprocessing
@@ -108,9 +112,9 @@ def yargy_parser(path):
     for line in text:
         matches = list(parser.findall(line))
         spans = [_.span for _ in matches]
-        new_span = [0,0]
-        if spans != [] and len(spans)>=2:
-            for i in range(0,len(spans)-1,1):
+        new_span = [0, 0]
+        if spans != [] and len(spans) >= 2:
+            for i in range(0, len(spans)-1, 1):
                 mini = 1000000
                 maxi = 0
                 if spans[i][0] < mini:
@@ -119,7 +123,7 @@ def yargy_parser(path):
                 if spans[i+1][1] > maxi:
                     new_span[1] = spans[i+1][1]
                     maxi = spans[i+1][1]
-                for i in range(new_span[0],new_span[1]):
+                for i in range(new_span[0], new_span[1]):
                     new_line.append(line[i])
                 new_line.append(' \n ')
     new_line = ''.join(new_line)
@@ -143,7 +147,7 @@ def yargy_parser(path):
     print(LIST)
     return LIST
 
-def count_param(dict_max):
+def calculate_param(dict_max):
     try:
         dict_max['Failure rate'] = 1/dict_max['MTBF']
     except:
@@ -170,7 +174,48 @@ def count_param(dict_max):
         dict_max['System Reliability'] = 0
     return dict_max
 
-def finding_num(b):
+def strip_num(string):
+    """There are several options for input numbers
+    '1,123,234 year/hours', '1123234.5 year/hours', '1123234.5'
+    '1 123 234 year/hours', '1 123 234'
+    """
+    #At first we replace ',' to '' and split string for grabbing the number
+    src_list = string.replace(',', '').split(' ')
+    #TODO: avoid try-except
+    try:
+        #Here we grab the number when possible.
+        #This is possible when the number is without a unit
+        number = int(float(''.join(src_list)))
+    except:
+        #Delete the unit so only num remains
+        del src_list[-1]
+        number = int(float(''.join(src_list)))
+    return number
+
+def to_hours(string):
+    """ Converts stuff like '13 years' or '13 тыс. часов' into hours """
+    if ('years' in string
+            or 'year' in string
+            or 'год' in string):
+        try:
+            num = float((string).split(' ')[0])
+            num = num * 8760
+            result = int(round(num))
+        except:
+            print('Error with float')
+    #TODO: apply all possible cases
+    elif 'тыс. часов' in string:
+        try:
+            num = float((string).split(' ')[0])
+            num = num * 1000
+            result = int(round(num))
+        except:
+            print('Error with float')
+    else:
+        result = strip_num(string)
+    return result
+
+def finding_num(parsed):
     #MTTF is listed as a synonym to MBTF as their difference is
     #more about recovery than about the time. They are almost
     #identical then it comes to calculating probabilities
@@ -183,63 +228,65 @@ def finding_num(b):
                   'mean time to repair',
                   'mean time to repairs',
                   'repair time']
-    dict_num = {'MTTR':{}, 'MTBF':{}}
+    dict_num = {'MTTR':[], 'MTBF':[]}
     dict_links = {'MTTR':{}, 'MTBF':{}}
     dict_max = {'MTTR':0, 'MTBF':0, 'Links':[]}
-    dict_max_num = {'MTTR':0, 'MTBF':0}
-    for link in b:
-        for i in range(len(b[link])):
-            if b[link][i].name.lower() in names_mtbf:
-                b[link][i].name = 'MTBF'
-            elif b[link][i].name.lower() in names_mttr:
-                b[link][i].name = 'MTTR'
-            if ('years' or 'year' or 'год') in b[link][i].num:
-                try:
-                    num = float((b[link][i].num).split(' ')[0])
-                    num = num * 8760
-                    b[link][i].num = int(round(num))
-                except:
-                    print('Error with float')
-            elif 'тыс. часов' in b[link][i].num:
-                try:
-                    num = float((b[link][i].num).split(' ')[0])
-                    num = num * 1000
-                    b[link][i].num = int(round(num))
-                except:
-                    print('Error with float')
+    for link in parsed:
+        for item in parsed[link]:
+            #Unify titles
+            if item.name.lower() in names_mtbf:
+                item.name = 'MTBF'
+            elif item.name.lower() in names_mttr:
+                item.name = 'MTTR'
+            item.num = to_hours(item.num)
+            dict_num[item.name].append(item.num)
+            if item.num in dict_links[item.name]:
+                dict_links[item.name][item.num].append(link)
             else:
-                #There are several options for input numbers
-                #'1,123,234 year/hours', '1123234.5 year/hours', '1123234.5'
-                #'1 123 234 year/hours', '1 123 234'
-                #At first we replace ',' to '' and split string for grabbing the number
-                b[link][i].num = b[link][i].num.replace(',', '').split(' ')
-                try:
-                    #Here we grabbing the number if it is possible.
-                    #This could be possible if number was without units
-                    b[link][i].num = int(float(''.join(b[link][i].num)))
-                except:
-                    #Else we delete units and remain only num
-                    del b[link][i].num[len(b[link][i].num)-1]
-                    b[link][i].num = int(float(''.join(b[link][i].num)))
-            try:
-                dict_num[b[link][i].name][b[link][i].num] += 1
-            except:
-                dict_num[b[link][i].name][b[link][i].num] = 1
-            dict_links[b[link][i].name][b[link][i].num] = link
-    #Matching value is the most repeatable one.
-    for name in ['MTBF', 'MTTR']:
-        for num in dict_num[name]:
-            if dict_num[name][num] > dict_max_num[name]:
-                checker = False
-                if (name == 'MTTR' and 0 < num < 100):
-                    checker = True
-                if (name == 'MTBF' and num > 50000):
-                    checker = True
-                if checker:
-                    dict_max_num[name] = dict_num[name][num]
-                    dict_max[name] = num
-                    if not dict_links[name][num] in dict_max['Links']:
-                        dict_max['Links'].append(dict_links[name][num])
-    dict_max = count_param(dict_max)
-    print(dict_max)
+                dict_links[item.name][item.num] = [link]
+    #Set maximum delta (%)
+    max_delta = 5
+    for param_name in dict_num:
+        values = dict_num[param_name]
+        counted_values = dict(Counter(values))
+        #Join close and equal values
+        deleted = []
+        for first_value, second_value in itertools.permutations(counted_values.keys(), 2):
+            if first_value in deleted or second_value in deleted:
+                continue
+            delta = 100 * abs(first_value - second_value) / mean([first_value, second_value])
+            #If the difference is less than delta and values are not equal
+            #Keep in mind we are iterating the same dict twice
+            if delta < max_delta:
+                to_keep = 0
+                to_replace = 0
+                if counted_values[first_value] >= counted_values[second_value]:
+                    to_keep = first_value
+                    to_replace = second_value
+                else:
+                    to_keep = second_value
+                    to_replace = first_value
+                deleted.append(to_replace)
+                #Recount
+                counted_values[to_keep] += counted_values[to_replace]
+                del counted_values[to_replace]
+                #Merge links
+                dict_links[param_name][to_keep] += dict_links[param_name][to_replace]
+                del dict_links[param_name][to_replace]
+        #Default values
+        amount_res = 0
+        value_res = 0
+        links_res = []
+        #Drop insane values and find the most popular one
+        for num in counted_values:
+            if ((param_name == 'MTTR' and 0 < num < 100) or
+                    (param_name == 'MTBF' and num > 50000)):
+                if counted_values[num] > amount_res:
+                    amount_res = counted_values[num]
+                    value_res = num
+                    links_res = dict_links[param_name][value_res]
+        dict_max[param_name] = value_res
+        dict_max['Links'] += links_res
+    dict_max = calculate_param(dict_max)
+    print(dict_max) #Free show for Artem
     return dict_max
