@@ -293,8 +293,9 @@ def finding_num(parsed):
                     value_res = num
                     links_res = dict_links[param_name][value_res]
         dict_max[param_name] = value_res
-        if dict_max['Links'] != links_res:
-            dict_max['Links'] += links_res
+        for link in links_res:
+            if not link in dict_max['Links']:
+                dict_max['Links'] += links_res
     dict_max = calculate_param(dict_max)
     print(dict_max) #Free show for Artem
     return dict_max
