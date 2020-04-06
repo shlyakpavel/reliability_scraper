@@ -65,9 +65,12 @@ def process_excell(path_1, path_2):
     """
     data_frame = pd.read_excel(path_1, engine='openpyxl')
     file_path = get_random_path("txt")
+
     QUERY_COLUMN = 'Product'
     result_list = []
     for query in data_frame[QUERY_COLUMN]:
+        if str(query) == 'nan':
+          continue
         select_query = select(
             device_table.c,
             device_table
@@ -104,6 +107,7 @@ def process_excell(path_1, path_2):
     result_df = result_df.rename(columns={"Query": QUERY_COLUMN})
 
     result_df.to_excel(path_2)
+
 
 
 class ExcellForm(FlaskForm):
