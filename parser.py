@@ -191,7 +191,9 @@ def strip_num(string):
             #Delete the unit so only num remains
             del src_list[-1]
             number = int(float(''.join(src_list)))
-       except:
+        except:
+            print(src_list)
+            print('Error convert')
             number = 0
     return number
 
@@ -244,7 +246,8 @@ def finding_num(parsed):
             item.num = to_hours(item.num)
             dict_num[item.name].append(item.num)
             if item.num in dict_links[item.name]:
-                dict_links[item.name][item.num].append(link)
+                if not link in dict_links[item.name][item.num]:
+                    dict_links[item.name][item.num].append(link)
             else:
                 dict_links[item.name][item.num] = [link]
     #Set maximum delta (%)
@@ -274,7 +277,8 @@ def finding_num(parsed):
                 counted_values[to_keep] += counted_values[to_replace]
                 del counted_values[to_replace]
                 #Merge links
-                dict_links[param_name][to_keep] += dict_links[param_name][to_replace]
+                if dict_links[param_name][to_keep] != dict_links[param_name][to_replace]:
+                    dict_links[param_name][to_keep] += dict_links[param_name][to_replace]
                 del dict_links[param_name][to_replace]
         #Default values
         amount_res = 0
@@ -289,7 +293,8 @@ def finding_num(parsed):
                     value_res = num
                     links_res = dict_links[param_name][value_res]
         dict_max[param_name] = value_res
-        dict_max['Links'] += links_res
+        if dict_max['Links'] != links_res:
+            dict_max['Links'] += links_res
     dict_max = calculate_param(dict_max)
     print(dict_max) #Free show for Artem
     return dict_max
