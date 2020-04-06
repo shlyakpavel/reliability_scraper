@@ -20,6 +20,15 @@ import pandas as pd
 
 from werkzeug.utils import secure_filename
 
+
+app = Flask(
+    __name__,
+    static_url_path='/static',
+    static_folder='static'
+)
+
+
+
 def get_random_path(ext):
     """Generates random number with txt extention"""
     path = str(randint(0, 100000)) + "." + ext
@@ -54,22 +63,43 @@ def process_excell(path_1, path_2):
     """
     data_frame = pd.read_excel(path_1, engine='openpyxl')
     file_path = get_random_path("txt")
-    for i, row in data_frame.iterrows():
-        links = google(str(row['Product']) + ' MTBF')
-        fnd = dict()
-        for link in links:
-            fetch(link, file_path)
-            fnd[link] = yargy_parser(file_path)
-            os.remove(file_path)
-        res = finding_num(fnd)
-        for param in res.keys():
-            if param not in data_frame.columns:
-                data_frame[param] = None
-            data_frame[param][i] = res[param]
-    data_frame.to_excel(path_2)
+    QUERY_COLUMN = 'Product'
+    result_list = []
+    for query in data_frame[QUERY_COLUMN]:
+        select_query = select(
+            device_table.c,
+            device_table
+        ).where(
+            device_table.c.query == query
+        )
+        query_result = engine.execute(select_query).fetchone()
+        if query_result:
+            result_dict = dict(query_result)
+            links = [
+                row[0] for row in 
+                engine.execute(
+                select([link_table.c.link], link_table).where(
+                    link_table.c.device_id == result_dict['id'])
+                ).fetchall()
+            ]
+            result_dict['links'] = links
+            result_list.append(
+                result_dict
+            )
+        else:
+            result_list.append(
+                search_by_query(query)
+            )
+    
+    result_df = pd.DataFrame(result_list)
+    result_df.columns = [
+        ' '.join(col.split('_')).capitalize()
+        for col in result_df.columns
+    ]
+    result_df.rename(columns={"Query": QUERY_COLUMN})
 
+    result_df.to_excel(path_2)
 
-app = Flask(__name__, static_url_path='/static', static_folder='static')
 
 class ExcellForm(FlaskForm):
     """A simple class for the form used by the uploader"""
@@ -112,6 +142,13 @@ def search_page():
     return search_by_query(query)
 
 
+def _patch_dict_keys(dict_):
+    for k, v in dict_.copy().items():
+        new_k  = '_'.join(k.lower().split())
+        dict_[new_k] = dict_.pop(k)
+    return dict_
+
+
 def search_by_query(query: str) -> str:
     links = google(query + ' mtbf')
     fnd = dict()
@@ -124,10 +161,8 @@ def search_by_query(query: str) -> str:
     res['query'] = query
 
     # patch column names
+    res = _patch_dict_keys(res)
     
-    for k, v in res.copy().items():
-        new_k  = '_'.join(k.lower().split())
-        res[new_k] = res.pop(k)
     links = res.pop('links', [])
     device_id = engine.execute(
         insert(device_table, values=res).\
@@ -155,10 +190,10 @@ def result():
     fn = secure_filename(filename)
     path = os.path.join(
         app.instance_path, 'excells', fn
-        )
+    )
     path_res = os.path.join(
         app.instance_path, 'excells', 'res_' + fn
-        )
+    )
     process_excell(path, path_res)
     return send_file(path_res, as_attachment=True)
 
@@ -166,6 +201,6 @@ def result():
 if __name__ == '__main__':
     engine = create_engine(
         'postgresql://postgres:docker@postgres:5432',
-        echo = True
+        echo=True
     )
     app.run(debug=True, host='0.0.0.0')
