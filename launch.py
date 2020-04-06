@@ -63,7 +63,10 @@ def process_excell(path_1, path_2):
             for param in res.keys():
                 if param not in data_frame.columns:
                     data_frame[param] = None
-                data_frame[param][i] = res[param]
+                if param != 'Links':
+                    data_frame[param][i] = res[param]
+                else:
+                    data_frame[param][i] = ' , '.join(res[param])
     data_frame.to_excel(path_2)
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
