@@ -6,7 +6,7 @@ from parser import yargy_parser
 from parser import finding_num
 
 from sqlalchemy import select, create_engine, insert
-
+import os
 from models import (
     device as device_table,
     link as link_table
@@ -88,16 +88,16 @@ def process_excell(path_1, path_2):
                 ).fetchall()
             ]
             result_dict['links'] = links
-            result_dict.pop('id', None)
-            result_list.append(
-                result_dict
-            )
+        
         else:
-            result = search_by_query(query)
-            result.pop('id', None)
-            result_list.append(
-                result
-            )
+            result_dict = search_by_query(query)
+
+        result_dict['links'] = ', '.join(result_dict['links'])
+        result_dict.pop('id', None)
+        result_list.append(
+            result_dict
+        )
+            
     
     result_df = pd.DataFrame(result_list)
     result_df.columns = [
@@ -109,10 +109,10 @@ def process_excell(path_1, path_2):
     result_df.to_excel(path_2)
 
 
-
 class ExcellForm(FlaskForm):
     """A simple class for the form used by the uploader"""
     excell = FileField(validators=[FileRequired()])
+
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
@@ -168,9 +168,28 @@ def search_by_query(query: str) -> str:
         os.remove(file_path)
     res = finding_num(fnd)
     res['query'] = query
-
+    
     # patch column names
     res = _patch_dict_keys(res)
+
+    # if all props == 0, skip saving in DB
+    if all(
+        res.get(prop, 0) == 0 
+        for prop in [
+            'mttr'
+            'mtbf'
+            'failure_rate'
+            'failure_rate_in_storage_mode'
+            'storage_time'
+            'minimal_resource'
+            'gamma_percentage_resource'
+            'average_resource'
+            'average_lifetime'
+            'recovery_intensity'
+            'system_reliability'
+        ]
+    ):
+        return res
     
     links = res.pop('links', [])
     device_id = engine.execute(
@@ -185,6 +204,7 @@ def search_by_query(query: str) -> str:
                 'device_id': device_id
             })
         )
+    res['links'] = links
     return res
 
 
