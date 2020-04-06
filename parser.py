@@ -199,6 +199,7 @@ def strip_num(string):
 
 def to_hours(string):
     """ Converts stuff like '13 years' or '13 тыс. часов' into hours """
+    result = 0
     if ('years' in string
             or 'year' in string
             or 'год' in string):
