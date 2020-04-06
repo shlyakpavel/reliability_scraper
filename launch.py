@@ -6,7 +6,7 @@ from parser import yargy_parser
 from parser import finding_num
 
 from sqlalchemy import select, create_engine, insert
-import os
+
 from models import (
     device as device_table,
     link as link_table
@@ -214,6 +214,8 @@ def result():
 def status():
     """Returns True is the thread is still running, False otherwise"""
     filename = request.args['filename']
+    if filename not in THREADS:
+        return "Error! File was not uploaded in this session"
     return str(THREADS[filename].isAlive())
 
 @app.route('/download')
@@ -225,8 +227,10 @@ def download():
         app.instance_path, 'excells', 'res_' + secure_fn
         )
     secure_fn = secure_filename(filename)
-    return send_file(path_res, as_attachment=True)
-
+    if os.path.isfile(path_res):
+        return send_file(path_res, as_attachment=True)
+    else:
+        return "Ooops. Something went wrong. Feel free to report it to our github issues: https://github.com/shlyakpavel/ingles"
 
 if __name__ == '__main__':
     engine = create_engine(
