@@ -14,8 +14,6 @@ from models import (
 
 from flask import Flask
 from flask import render_template, redirect, url_for, request, send_file
-from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileRequired
 
 import pandas as pd
 
@@ -109,17 +107,11 @@ def process_excell(path_1, path_2):
     result_df.to_excel(path_2)
 
 
-
-class ExcellForm(FlaskForm):
-    """A simple class for the form used by the uploader"""
-    excell = FileField(validators=[FileRequired()])
-
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     """Upload page is used to retrieve the xls file from user"""
-    form = ExcellForm(csrf_enabled=False)
-    if form.validate_on_submit():
-        f = form.excell.data
+    if request.method == 'POST':
+        f = request.files['excell']
         #filename = secure_filename(f.filename)
         filename = get_random_path("xlsx")
         if not os.path.exists(app.instance_path):
@@ -130,8 +122,8 @@ def upload():
         )
         f.save(path)
         return redirect(url_for('result', filename=filename))
-
-    return render_template('upload.html', form=form)
+    else:
+        return render_template('upload.html')
 
 
 @app.route("/search", methods=['GET', 'POST'])
