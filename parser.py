@@ -298,7 +298,7 @@ def finding_num(parsed):
         dict_max[param_name] = value_res
         for link in links_res:
             if not link in dict_max['Links']:
-                dict_max['Links'] += links_res
+                dict_max['Links'].append(link)
         #Amount_res can be greater than amount of links
         #as the same value can be providen twice on
         #the same resource. Thus, we use amount_res
