@@ -2,6 +2,7 @@ import ssl
 import socket
 from urllib.parse import urlsplit
 
+
 def check_ssl_ev(hostname):
     """Check if SSL EV is available"""
     try:
@@ -16,14 +17,15 @@ def check_ssl_ev(hostname):
         result = False
     return result
 
+
 def score(links, amount):
     """Are the sources trustworthy?"""
     result = 1
-    #One link per site is a good idea, we didn't catch
-    #a model name or a catalog
+    # One link per site is a good idea, we didn't catch
+    # a model name or a catalog
     if links == amount:
         result += 2
-    #Amount of matches gives maximum three points
+    # Amount of matches gives maximum three points
     if amount < 3:
         result += amount
     else:
@@ -34,7 +36,7 @@ def score(links, amount):
         if url.scheme == 'https':
             if check_ssl_ev(url.netloc):
                 ssl_score += 2
-    #SSL is no more than 4 points
+    # SSL is no more than 4 points
     if ssl_score < 4:
         result += ssl_score
     else:
