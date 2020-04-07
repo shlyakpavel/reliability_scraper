@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="/static/index.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search result</title>
+</head>
+<body>
+   <div class="logo">
+   <a href="/">
+       <span class="s">S</span>
+       <span class="c">c</span>
+       <span class="r">r</span>
+       <span class="a">a</span>
+       <span class="p">p</span>
+       <span class="e">e</span>
+       <span class="rz">r</span>
+   </a>
+   </div>
+<table>
+                          <!-- mttr = dicty['mttr'], mtbf = dicty['mtbf'],
+                           fail = dicty['failure_rate'],
+                           stor_mode = dicty['failure_rate_in_storage_mode'],
+                           stor_time = dicty['storage_time'],
+                           min_res = dicty['minimal_resource'],
+                           gam = dicty['gamma_percentage_resource'],
+                           a_res = dicty['average_resource'],
+                           a_life = dicty['average_lifetime'],
+                           rec_inten = dicty['recovery_intensity'],
+                           sys_rel = dicty['system_reliability']) -->
+<tr>
+    <td>Product</td><td>{{query}}</td><td></td>
+</tr>
+<tr>
+    <td>MTTR</td><td>{{mttr}}</td><td>Hours</td>
+</tr>
+<tr>
+    <td>MTBF</td><td>{{mtbf}}</td><td>Hours</td>
+</tr>
+<tr>
+    <td>Failute rate</td><td>{{fail}}</td><td>Hours<sup>-1</sup></td>
+</tr>
+<tr>
+    <td>Failute rate in storage mode</td><td>{{stor_mode}}</td><td>%</td>
+</tr>
+<tr>
+    <td>Storage time</td><td>{{stor_time}}</td><td>Hours</td>
+</tr>
+<tr>
+    <td>Minimal resource</td><td>{{min_res}}</td><td>Hours</td>
+</tr>
+<tr>
+    <td>Gamma percentage resource</td><td>{{gam}}</td><td>Hours</td>
+</tr>
+<tr>
+    <td>Average resource</td><td>{{a_res}}</td><td>Hours</td>
+</tr>
+<tr>
+    <td>Average lifetime</td><td>{{a_life}}</td><td>Years</td>
+</tr>
+<tr>
+    <td>Recovery intensity</td><td>{{rec_inten}}</td><td></td>
+</tr>
+<tr>
+    <td>System reliability</td><td>{{sys_rel}}</td><td>%</td>
+</tr>
+</table>
+</body>
+</html>
+

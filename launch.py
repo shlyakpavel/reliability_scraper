@@ -79,14 +79,14 @@ def process_excell(path_1, path_2):
         if query_result:
             result_dict = dict(query_result)
             links = [
-                row[0] for row in 
+                row[0] for row in
                 engine.execute(
                 select([link_table.c.link], link_table).where(
                     link_table.c.device_id == result_dict['id'])
                 ).fetchall()
             ]
             result_dict['links'] = links
-        
+
         else:
             result_dict = search_by_query(query)
 
@@ -95,8 +95,8 @@ def process_excell(path_1, path_2):
         result_list.append(
             result_dict
         )
-            
-    
+
+
     result_df = pd.DataFrame(result_list)
     result_df.columns = [
         ' '.join(col.split('_')).capitalize()
@@ -128,8 +128,10 @@ def upload():
 @app.route("/search", methods=['GET', 'POST'])
 def search_page():
     """Result page for the manual search entered by user on index page"""
+
+    dicty = dict()
     query = request.args.get('query')
-    
+
     device_query = select(
         device_table.c, device_table
     ).where(device_table.c.query == query)
@@ -137,9 +139,21 @@ def search_page():
         device_query
     ).fetchone()
     if query_result:
-        return dict(query_result)
+        dicty = dict(query_result)
+    else:
+        dicty = search_by_query(query)
+    return render_template('search_result.html', query = dicty['query'],
+                           mttr = dicty['mttr'], mtbf = dicty['mtbf'],
+                           fail = dicty['failure_rate'],
+                           stor_mode = dicty['failure_rate_in_storage_mode'],
+                           stor_time = dicty['storage_time'],
+                           min_res = dicty['minimal_resource'],
+                           gam = dicty['gamma_percentage_resource'],
+                           a_res = dicty['average_resource'],
+                           a_life = dicty['average_lifetime'],
+                           rec_inten = dicty['recovery_intensity'],
+                           sys_rel = dicty['system_reliability'])
 
-    return search_by_query(query)
 
 
 def _patch_dict_keys(dict_):
@@ -159,7 +173,7 @@ def search_by_query(query: str) -> str:
         os.remove(file_path)
     res = finding_num(fnd)
     res['query'] = query
-    
+
     # patch column names
     res = _patch_dict_keys(res)
 
@@ -167,7 +181,7 @@ def search_by_query(query: str) -> str:
     if res['mttr'] == 0 and res['mtbf'] == 0:
         print("Nothing to save")
         return res
-    
+
     links = res.pop('links', [])
     device_id = engine.execute(
         insert(device_table, values=res).\
