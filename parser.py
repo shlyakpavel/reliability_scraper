@@ -6,6 +6,7 @@ from yargy.interpretation import fact
 from yargy import rule, Parser, or_, not_, and_
 from yargy.predicates import eq, type
 from yargy.pipelines import morph_pipeline
+from doitrust import score
 
 def yargy_parser(path):
     RULE = fact(
@@ -236,7 +237,7 @@ def finding_num(parsed):
                   'repair time']
     dict_num = {'MTTR':[], 'MTBF':[]}
     dict_links = {'MTTR':{}, 'MTBF':{}}
-    dict_max = {'MTTR':0, 'MTBF':0, 'Links':[]}
+    dict_max = {'MTTR':0, 'MTBF':0, 'Score':0, 'Links':[]}
     for link in parsed:
         for item in parsed[link]:
             #Unify titles
@@ -297,6 +298,11 @@ def finding_num(parsed):
         for link in links_res:
             if not link in dict_max['Links']:
                 dict_max['Links'] += links_res
+        #Amount_res can be greater than amount of links
+        #as the same value can be providen twice on
+        #the same resource. Thus, we use amount_res
+        cur_score = score(links_res, amount_res)
+        dict_max['score'] += cur_score
     dict_max = calculate_param(dict_max)
     print(dict_max) #Free show for Artem
     return dict_max

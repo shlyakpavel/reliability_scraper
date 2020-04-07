@@ -152,7 +152,8 @@ def search_page():
                            a_res = dicty['average_resource'],
                            a_life = dicty['average_lifetime'],
                            rec_inten = dicty['recovery_intensity'],
-                           sys_rel = dicty['system_reliability'])
+                           sys_rel = dicty['system_reliability'],
+                           score=dicty['score'])
 
 
 

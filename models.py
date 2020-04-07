@@ -34,7 +34,8 @@ device = Table(
     Column('average_resource', Float),
     Column('average_lifetime', Float),
     Column('recovery_intensity', Float),
-    Column('system_reliability', Float)
+    Column('system_reliability', Float),
+    Column('score', Integer)
 )
 
 if __name__ == '__main__':
