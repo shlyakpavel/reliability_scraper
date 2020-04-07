@@ -237,7 +237,7 @@ def finding_num(parsed):
                   'repair time']
     dict_num = {'MTTR':[], 'MTBF':[]}
     dict_links = {'MTTR':{}, 'MTBF':{}}
-    dict_max = {'MTTR':0, 'MTBF':0, 'Score':0, 'Links':[]}
+    dict_max = {'MTTR':0, 'MTBF':0, 'score':0, 'Links':[]}
     for link in parsed:
         for item in parsed[link]:
             #Unify titles
