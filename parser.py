@@ -237,7 +237,8 @@ def finding_num(parsed):
                   'repair time']
     dict_num = {'MTTR':[], 'MTBF':[]}
     dict_links = {'MTTR':{}, 'MTBF':{}}
-    dict_max = {'MTTR':0, 'MTBF':0, 'score':0, 'Links':[]}
+    dict_max = {'MTTR':0, 'MTBF':0, 'Links':[]}
+    score_max = 0
     for link in parsed:
         for item in parsed[link]:
             #Unify titles
@@ -302,7 +303,9 @@ def finding_num(parsed):
         #as the same value can be providen twice on
         #the same resource. Thus, we use amount_res
         cur_score = score(links_res, amount_res)
-        dict_max['score'] += cur_score
+        #Divide cur_score by params
+        score_max += cur_score / len(dict_num)
     dict_max = calculate_param(dict_max)
-    print(dict_max) #Free show for Artem
+    dict_max['score'] = int(score_max)
+    print(dict_max)
     return dict_max
