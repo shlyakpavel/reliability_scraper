@@ -232,7 +232,7 @@ def to_hours(string):
         result = strip_num(string)
     return result
 
-def finding_num(parsed):
+def finding_num(parsed, query):
     #MTTF is listed as a synonym to MBTF as their difference is
     #more about recovery than about the time. They are almost
     #identical then it comes to calculating probabilities
@@ -316,7 +316,7 @@ def finding_num(parsed):
         #Amount_res can be greater than amount of links
         #as the same value can be providen twice on
         #the same resource. Thus, we use amount_res
-        cur_score = score(links_res, amount_res)
+        cur_score = score(links_res, amount_res, query)
         #Divide cur_score by params
         score_max += cur_score / len(dict_num)
     dict_max = calculate_param(dict_max)
