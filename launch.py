@@ -172,7 +172,7 @@ def search_by_query(query: str) -> str:
         fetch(link, file_path)
         fnd[link] = yargy_parser(file_path)
         os.remove(file_path)
-    res = finding_num(fnd)
+    res = finding_num(fnd, query)
     res['query'] = query
 
     # patch column names
