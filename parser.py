@@ -65,7 +65,10 @@ def yargy_parser(path):
             'hours',
             'час',
             'h',
-            'ч'
+            'ч',
+            'мин',
+            'minutes',
+            'minute'
         ]
     )
 
@@ -218,6 +221,14 @@ def to_hours(string):
             result = int(round(num))
         except:
             print('Error with float')
+    elif ('minutes' in string
+             or 'мин' in string
+             or 'минут' in string):
+        try:
+            num = float((string).split(' ')[0])
+            result = num/60
+        except:
+            print('Error with float')
     else:
         result = strip_num(string)
     return result
@@ -247,6 +258,8 @@ def finding_num(parsed):
             elif item.name.lower() in names_mttr:
                 item.name = 'MTTR'
             item.num = to_hours(item.num)
+            if item.name == 'MTTR' and item.num > 20:
+                item.num = item.num/60
             dict_num[item.name].append(item.num)
             if item.num in dict_links[item.name]:
                 if not link in dict_links[item.name][item.num]:
