@@ -221,7 +221,7 @@ def to_hours(string):
             result = int(round(num))
         except:
             print('Error with float')
-    elif ('minutes' in string
+    elif ('minute' in string
              or 'мин' in string):
         try:
             num = float((string).split(' ')[0])
@@ -257,6 +257,8 @@ def finding_num(parsed):
             elif item.name.lower() in names_mttr:
                 item.name = 'MTTR'
             item.num = to_hours(item.num)
+            # TODO: fix multiline recognition.
+            # Temporary workaround
             if item.name == 'MTTR' and item.num > 20:
                 item.num = item.num/60
             dict_num[item.name].append(item.num)
