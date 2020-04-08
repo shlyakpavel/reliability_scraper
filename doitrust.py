@@ -22,7 +22,7 @@ def check_ssl_ev(hostname):
 
 def score(links, amount, query):
     """Are the sources trustworthy?"""
-    query = query.split()
+    query = query.lower().split(' ')
     result = 1
     # One link per site is a good idea, we didn't catch
     # a model name or a catalog
@@ -40,9 +40,11 @@ def score(links, amount, query):
             ssl_ev = check_ssl_ev(url.netloc)
             if ssl_ev[0]:
                 ssl_score += 2
+            domain_matches = False
             for part_query in query:
-                if part_query in ssl_ev[1].lower():
-                    ssl_score += 2
+                domain_matches = part_query in ssl_ev[1].lower()
+            if domain_matches:
+                ssl_score += 2
     # SSL is no more than 4 points
     if ssl_score < 4:
         result += ssl_score
