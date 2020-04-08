@@ -13,7 +13,7 @@ def check_ssl_ev(hostname):
         s.close()
         subject = dict(x[0] for x in cert['subject'])
         result = ("serialNumber" in subject)
-    except ssl.SSLError:
+    except (ssl.SSLError, ConnectionError):
         result = False
     return result
 
