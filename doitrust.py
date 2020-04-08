@@ -34,18 +34,18 @@ def score(links, amount, query):
     else:
         result = 3
     ssl_score = 0
+    domain_matches = False
     for link in links:
         url = urlsplit(link)
         if url.scheme == 'https':
             ssl_ev = check_ssl_ev(url.netloc)
             if ssl_ev[0]:
                 ssl_score += 2
-            domain_matches = False
             for part_query in query:
                 domain_matches = domain_matches or ( part_query in ssl_ev[1].lower() )
-            if domain_matches:
-                ssl_score += 2
-    # SSL is no more than 4 points
+    if domain_matches:
+        ssl_score += 2
+    # SSL in summary should be no more than 4 points
     if ssl_score < 4:
         result += ssl_score
     else:
