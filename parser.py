@@ -222,8 +222,7 @@ def to_hours(string):
         except:
             print('Error with float')
     elif ('minutes' in string
-             or 'мин' in string
-             or 'минут' in string):
+             or 'мин' in string):
         try:
             num = float((string).split(' ')[0])
             result = num/60
