@@ -42,7 +42,7 @@ def score(links, amount, query):
                 ssl_score += 2
             domain_matches = False
             for part_query in query:
-                domain_matches = part_query in ssl_ev[1].lower()
+                domain_matches = domain_matches or ( part_query in ssl_ev[1].lower() )
             if domain_matches:
                 ssl_score += 2
     # SSL is no more than 4 points
