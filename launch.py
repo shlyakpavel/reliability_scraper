@@ -152,7 +152,8 @@ def search_page():
                            a_res = dicty['average_resource'],
                            a_life = dicty['average_lifetime'],
                            rec_inten = dicty['recovery_intensity'],
-                           sys_rel = dicty['system_reliability'])
+                           sys_rel = dicty['system_reliability'],
+                           score=dicty['score'])
 
 
 
@@ -171,7 +172,7 @@ def search_by_query(query: str) -> str:
         fetch(link, file_path)
         fnd[link] = yargy_parser(file_path)
         os.remove(file_path)
-    res = finding_num(fnd)
+    res = finding_num(fnd, query)
     res['query'] = query
 
     # patch column names

@@ -6,6 +6,7 @@ from yargy.interpretation import fact
 from yargy import rule, Parser, or_, not_, and_
 from yargy.predicates import eq, type
 from yargy.pipelines import morph_pipeline
+from doitrust import score
 
 def yargy_parser(path):
     RULE = fact(
@@ -64,7 +65,10 @@ def yargy_parser(path):
             'hours',
             'час',
             'h',
-            'ч'
+            'ч',
+            'мин',
+            'minutes',
+            'minute'
         ]
     )
 
@@ -217,11 +221,18 @@ def to_hours(string):
             result = int(round(num))
         except:
             print('Error with float')
+    elif ('minute' in string
+             or 'мин' in string):
+        try:
+            num = float((string).split(' ')[0])
+            result = num/60
+        except:
+            print('Error with float')
     else:
         result = strip_num(string)
     return result
 
-def finding_num(parsed):
+def finding_num(parsed, query):
     #MTTF is listed as a synonym to MBTF as their difference is
     #more about recovery than about the time. They are almost
     #identical then it comes to calculating probabilities
@@ -237,6 +248,7 @@ def finding_num(parsed):
     dict_num = {'MTTR':[], 'MTBF':[]}
     dict_links = {'MTTR':{}, 'MTBF':{}}
     dict_max = {'MTTR':0, 'MTBF':0, 'Links':[]}
+    score_max = 0
     for link in parsed:
         for item in parsed[link]:
             #Unify titles
@@ -245,6 +257,10 @@ def finding_num(parsed):
             elif item.name.lower() in names_mttr:
                 item.name = 'MTTR'
             item.num = to_hours(item.num)
+            # TODO: fix multiline recognition.
+            # Temporary workaround
+            if item.name == 'MTTR' and item.num > 20:
+                item.num = item.num/60
             dict_num[item.name].append(item.num)
             if item.num in dict_links[item.name]:
                 if not link in dict_links[item.name][item.num]:
@@ -296,7 +312,14 @@ def finding_num(parsed):
         dict_max[param_name] = value_res
         for link in links_res:
             if not link in dict_max['Links']:
-                dict_max['Links'] += links_res
+                dict_max['Links'].append(link)
+        #Amount_res can be greater than amount of links
+        #as the same value can be providen twice on
+        #the same resource. Thus, we use amount_res
+        cur_score = score(links_res, amount_res, query)
+        #Divide cur_score by params
+        score_max += cur_score / len(dict_num)
     dict_max = calculate_param(dict_max)
-    print(dict_max) #Free show for Artem
+    dict_max['score'] = int(score_max)
+    print(dict_max)
     return dict_max
