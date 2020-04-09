@@ -68,7 +68,8 @@ def yargy_parser(path):
             'ч',
             'мин',
             'minutes',
-            'minute'
+            'minute',
+            'минут'
         ]
     )
 
@@ -102,6 +103,7 @@ def yargy_parser(path):
 
     f = open(path, 'r')
     text = f.read()
+    text = text.replace('|',' ')
     #Remove line separators
     text = re.sub("^\s+|\n|\r|\s+$", '', text)
     line = text
