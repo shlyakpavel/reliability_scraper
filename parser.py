@@ -103,7 +103,7 @@ def yargy_parser(path):
 
     f = open(path, 'r')
     text = f.read()
-    text = text.replace('|','')
+    text = text.replace('|',' ')
     #Remove line separators
     text = re.sub("^\s+|\n|\r|\s+$", '', text)
     line = text
