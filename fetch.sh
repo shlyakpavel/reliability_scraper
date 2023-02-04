@@ -3,7 +3,7 @@
 #### Usage fetch.sh output URL
 #### Where output - path to output file
 #### URL - the adress to FETCH
-#### Author: Pavel Shlyak
+#### Author: Pavel Shliak
 # Output file path
 ouput_file="$1"
 # Unencoded temporary file path
